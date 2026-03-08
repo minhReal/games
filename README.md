@@ -1,1 +1,1 @@
-# games
+# [games](https://minhreal.github.io/games/)
