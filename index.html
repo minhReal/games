@@ -338,19 +338,40 @@ header{position:relative;z-index:2;text-align:center;padding:44px 20px 10px;user
   .memc{height:60px}
   .reel{width:76px;height:76px;font-size:2.4rem}
 }
+
+/* ─── EXTERNAL GAME CARDS ─── */
+.badge-ext{background:rgba(255,100,0,.22);color:#ff9040;border:1px solid rgba(255,100,0,.35)}
+.gcx{cursor:pointer}
+
+
+/* ─── IFRAME GAME MODAL ─── */
+.iframe-game{width:100%;height:560px;border-radius:12px;overflow:hidden;position:relative;background:#000}
+.iframe-game iframe{width:100%;height:100%;border:none}
+.iframe-cover{position:absolute;inset:0;background:rgba(0,0,20,.85);border-radius:12px;
+  display:flex;align-items:center;justify-content:center;flex-direction:column;
+  gap:14px;cursor:pointer;transition:opacity .3s}
+.iframe-cover.hidden{opacity:0;pointer-events:none}
+.iframe-icon{font-size:3.5rem;animation:iFloat 2s ease infinite alternate}
+@keyframes iFloat{from{transform:translateY(0)}to{transform:translateY(-8px)}}
+.iframe-cover h3{font-family:'Orbitron',monospace;font-size:1.2rem;color:#fff;text-align:center}
+.iframe-cover p{font-size:.8rem;color:rgba(255,255,255,.55);text-align:center;max-width:280px;line-height:1.7}
+.iframe-start-btn{padding:12px 30px;background:linear-gradient(135deg,#00e5ff,#0088cc);
+  border:none;border-radius:10px;font-family:'Orbitron',monospace;font-size:.82rem;
+  font-weight:700;color:#000;cursor:pointer;letter-spacing:.08em}
+.iframe-start-btn:hover{transform:scale(1.04)}
 </style>
 </head>
 <body>
 <div class="particles" id="particles"></div>
-<div class="sound-ctrl">
-  <button class="sound-btn" id="music-btn" onclick="toggleMusic()" title="Nhạc">🎵</button>
-  <button class="sound-btn" id="sfx-btn" onclick="toggleSFX()" title="Âm thanh">🔊</button>
-</div>
-<header>
-  <div class="logo">🎮 ARCADE ZONE</div>
-  <div class="tagline">16 Games · Canvas Art · 3D World · Mobile Ready</div>
-  <div class="coins-bar">💰 <span id="gcoin">1,000</span> Coins</div>
-</header>
+
+    <div class="ad-sub">Xem quảng cáo để nhận <strong style="color:var(--c3)">+50 Coins</strong></div>
+    <div class="ad-screen">
+      <div class="ad-fake-vid" id="ad-video">
+        <div style="font-size:2.8rem" id="ad-icon">🎮</div>
+        <div style="font-family:Orbitron,monospace;font-size:.75rem;color:rgba(255,255,255,.5);letter-spacing:.1em">ĐANG PHÁT QUẢNG CÁO...</div>
+        <div style="width:60%;height:3px;background:rgba(255,255,255,.1);border-radius:2px;overflow:hidden;margin-top:6px">
+          <div id="ad-vid-prog" style="height:100%;background:rgba(0,245,255,.7);width:0%;transition:width .5s"></div></div>
+      </div>
 
 <div class="grid" id="game-grid"></div>
 
@@ -397,25 +418,91 @@ const SFX={
 };
 
 // Background music — chiptune arpeggio
-const MUSIC_NOTES=[261,329,392,523,659,784,1047,784,659,523,392,329];
-let musicStep=0,musicPlaying=false;
+// ─── LOFI MUSIC ENGINE (Am7→Fmaj7→Cmaj7→G7) ───────────────
+const LOFI={
+  chords:[[220,261.63,329.63,392],[174.61,220,261.63,329.63],[261.63,329.63,392,493.88],[196,246.94,329.63,392]],
+  bass:[110,87.31,130.81,98],
+  mel:[440,493.88,523.25,587.33,659.25,698.46,783.99],
+  step:0,ci:0,playing:false
+};
+const BPM=78,BEAT=60/BPM*1000;
 function startMusic(){
-  if(!musicOn||musicPlaying)return;
-  try{getAC();musicPlaying=true;musicTick();}catch(e){}
+  if(!musicOn||LOFI.playing)return;
+  try{getAC();LOFI.playing=true;lofiTick();}catch(e){}
 }
-function musicTick(){
-  if(!musicOn||!musicPlaying)return;
-  const f=MUSIC_NOTES[musicStep%MUSIC_NOTES.length];
-  const ac=getAC(),o=ac.createOscillator(),g=ac.createGain();
-  o.connect(g);g.connect(ac.destination);o.type='square';o.frequency.value=f;
-  g.gain.setValueAtTime(.04,ac.currentTime);g.gain.exponentialRampToValueAtTime(.001,ac.currentTime+.12);
-  o.start();o.stop(ac.currentTime+.15);musicStep++;
-  musicTimer=setTimeout(musicTick,160);
+function lofiTick(){
+  if(!musicOn||!LOFI.playing)return;
+  const ac=getAC(),now=ac.currentTime;
+  const beat=LOFI.step%16;
+
+  // Shared warm LP filter
+  const lp=ac.createBiquadFilter();lp.type='lowpass';lp.frequency.value=1600;lp.Q.value=.7;
+  lp.connect(ac.destination);
+
+  // Subtle vinyl noise every tick
+  if(Math.random()>.7){
+    try{const nb=ac.createBuffer(1,~~(ac.sampleRate*.03),ac.sampleRate),nd=nb.getChannelData(0);
+    for(let i=0;i<nd.length;i++)nd[i]=(Math.random()*2-1)*.018;
+    const ns=ac.createBufferSource(),ng=ac.createGain();ns.buffer=nb;
+    ng.gain.setValueAtTime(.018,now);ns.connect(ng);ng.connect(lp);ns.start(now);}catch(e){}
+  }
+
+  // Kick: beat 0,8
+  if(beat===0||beat===8){
+    const ko=ac.createOscillator(),kg=ac.createGain();ko.type='sine';
+    ko.frequency.setValueAtTime(140,now);ko.frequency.exponentialRampToValueAtTime(38,now+.11);
+    kg.gain.setValueAtTime(.28,now);kg.gain.exponentialRampToValueAtTime(.001,now+.13);
+    ko.connect(kg);kg.connect(lp);ko.start(now);ko.stop(now+.14);
+  }
+  // Snare: beat 4,12
+  if(beat===4||beat===12){
+    try{const sb=ac.createBuffer(1,~~(ac.sampleRate*.07),ac.sampleRate),sd=sb.getChannelData(0);
+    for(let i=0;i<sd.length;i++)sd[i]=(Math.random()*2-1)*Math.pow(1-i/sd.length,2)*.55;
+    const ss=ac.createBufferSource(),sg=ac.createGain();ss.buffer=sb;
+    sg.gain.setValueAtTime(.14,now);sg.gain.exponentialRampToValueAtTime(.001,now+.08);
+    ss.connect(sg);sg.connect(lp);ss.start(now);}catch(e){}
+  }
+  // Hi-hat: every 2 steps
+  if(beat%2===0){
+    try{const hb=ac.createBuffer(1,~~(ac.sampleRate*.03),ac.sampleRate),hd=hb.getChannelData(0);
+    for(let i=0;i<hd.length;i++)hd[i]=(Math.random()*2-1)*Math.pow(1-i/hd.length,4);
+    const hs=ac.createBufferSource(),hg=ac.createGain();hs.buffer=hb;
+    hg.gain.setValueAtTime(.042,now);hs.connect(hg);hg.connect(lp);hs.start(now);}catch(e){}
+  }
+  // Chord strum every 4 steps
+  if(beat%4===0){
+    const ch=LOFI.chords[LOFI.ci];
+    ch.forEach((freq,i)=>{
+      const o=ac.createOscillator(),g=ac.createGain();
+      o.type='triangle';o.frequency.value=freq*(1+(Math.random()*.004-.002));
+      g.gain.setValueAtTime(0,now+i*.022);
+      g.gain.linearRampToValueAtTime(.042,now+i*.022+.025);
+      g.gain.exponentialRampToValueAtTime(.001,now+BEAT*3.6/1000);
+      o.connect(g);g.connect(lp);o.start(now+i*.022);o.stop(now+BEAT*4/1000);
+    });
+    // Bass note - slow attack for lofi feel
+    const bo=ac.createOscillator(),bg=ac.createGain();
+    bo.type='sine';bo.frequency.value=LOFI.bass[LOFI.ci];
+    bg.gain.setValueAtTime(0,now);bg.gain.linearRampToValueAtTime(.11,now+.04);
+    bg.gain.exponentialRampToValueAtTime(.001,now+BEAT*3.8/1000);
+    bo.connect(bg);bg.connect(lp);bo.start(now);bo.stop(now+BEAT*4/1000);
+  }
+  // Pentatonic melody note (sparse, lofi style)
+  if((beat===2||beat===6||beat===10||beat===14)&&Math.random()>.5){
+    const mf=LOFI.mel[~~(Math.random()*LOFI.mel.length)];
+    const mo=ac.createOscillator(),mg=ac.createGain();
+    mo.type='sine';mo.frequency.value=mf;
+    mg.gain.setValueAtTime(.048,now);mg.gain.exponentialRampToValueAtTime(.001,now+BEAT*1.6/1000);
+    mo.connect(mg);mg.connect(lp);mo.start(now);mo.stop(now+BEAT*2/1000);
+  }
+  LOFI.step++;
+  if(LOFI.step%16===0)LOFI.ci=(LOFI.ci+1)%4;
+  musicTimer=setTimeout(lofiTick,BEAT*.99);
 }
-function stopMusic(){musicPlaying=false;clearTimeout(musicTimer);}
+function stopMusic(){LOFI.playing=false;clearTimeout(musicTimer);}
 function toggleMusic(){musicOn=!musicOn;const b=document.getElementById('music-btn');
   b.classList.toggle('off',!musicOn);b.textContent=musicOn?'🎵':'🔇';
-  if(musicOn)startMusic();else stopMusic();}
+  if(musicOn){LOFI.playing=false;startMusic();}else stopMusic();}
 function toggleSFX(){sfxOn=!sfxOn;const b=document.getElementById('sfx-btn');
   b.classList.toggle('off',!sfxOn);b.textContent=sfxOn?'🔊':'🔈';}
 document.addEventListener('click',()=>{if(!musicPlaying&&musicOn)startMusic();},{once:true});
@@ -795,6 +882,60 @@ const GAMES=[
      {i:'👁️',t:'Nhìn xung quanh',d:'Di chuột sau khi khoá để nhìn mọi hướng.'},
      {i:'⛏️',t:'Phá khối',d:'Click TRÁI để phá khối đang nhìn vào.'},
      {i:'🧱',t:'Đặt khối',d:'Click PHẢI để đặt khối. Dùng 1-9 hoặc scroll để chọn loại.'}]}
+];
+
+// ─── EXTERNAL GAMES (iframe embed) ───────────────────────────────
+const EXT_GAMES=[
+  {id:'eaglercraft',name:'Minecraft Online',desc:'Minecraft 1.8 chạy ngay trên browser! Có server multiplayer!',
+   badge:'MULTIPLAYER·FREE',badgeCls:'badge-3d',btnGrad:'#4a8f2a,#1e3d0d',btnColor:'#fff',
+   url:'https://minecraftforfreex.com/eaglercraft/',
+   icon:'⛏️',
+   rules:[
+     {i:'⛏️',t:'Minecraft Browser',d:'Phiên bản Eaglercraft 1.8.8 chạy hoàn toàn trong trình duyệt.'},
+     {i:'🌐',t:'Multiplayer',d:'Nhấn Multiplayer → Add Server → nhập địa chỉ WebSocket server.'},
+     {i:'🎮',t:'Controls',d:'WASD di chuyển | Space nhảy | E kho đồ | Shift ngồi | T chat'},
+     {i:'🖱️',t:'Chuột',d:'Click vào game để khoá chuột. ESC để mở menu/giải phóng chuột.'},
+     {i:'💡',t:'Tip',d:'Chơi tốt nhất trên Chrome/Firefox phiên bản mới nhất.'}]},
+  {id:'subwaysurfers',name:'Subway Surfers',desc:'Chạy trốn cảnh sát trên đường tàu, tránh chướng ngại vật!',
+   badge:'HOT GAME',badgeCls:'badge-ext',btnGrad:'#ff6600,#cc2200',btnColor:'#fff',
+   url:'https://poki.com/en/g/subway-surfers',
+   icon:'🏃',
+   rules:[
+     {i:'⬆️',t:'Nhảy',d:'Swipe lên hoặc ↑ để nhảy qua chướng ngại vật.'},
+     {i:'⬇️',t:'Trượt',d:'Swipe xuống hoặc ↓ để trượt qua rào cản.'},
+     {i:'↔️',t:'Đổi làn',d:'Swipe trái/phải để đổi đường chạy.'},
+     {i:'🪙',t:'Thu thập',d:'Nhặt coins, chìa khoá và power-up để tăng điểm.'},
+     {i:'🌐',t:'Nguồn',d:'Game chạy qua Poki.com — cần kết nối internet.'}]},
+  {id:'tetrio',name:'TETR.IO — Tetris Online',desc:'Tetris battle royale! Đấu với hàng trăm người thật!',
+   badge:'BATTLE ROYALE',badgeCls:'badge-ext',btnGrad:'#0044cc,#001166',btnColor:'#fff',
+   url:'https://tetr.io/',
+   icon:'🟦',
+   rules:[
+     {i:'🎮',t:'Tetris PvP',d:'Battle với người chơi toàn cầu realtime. Xếp hàng gửi rác cho đối thủ.'},
+     {i:'↔️',t:'Controls',d:'← → di chuyển | ↑ xoay | ↓ rơi nhanh | Space: hard drop'},
+     {i:'🏆',t:'Ranking',d:'Hệ thống ELO từ D lên X rank (Grandmaster).'},
+     {i:'👥',t:'Phòng riêng',d:'Tạo phòng chơi với bạn bè bằng room code.'},
+     {i:'🆓',t:'Free',d:'Hoàn toàn miễn phí, không cần tải xuống.'}]},
+  {id:'geoguessr',name:'GeoGuessr',desc:'Đoán địa điểm trên Google Street View toàn cầu!',
+   badge:'TRÍ TUỆ',badgeCls:'badge-med',btnGrad:'#0077cc,#003388',btnColor:'#fff',
+   url:'https://www.geoguessr.com/',
+   icon:'🌍',
+   rules:[
+     {i:'🌍',t:'Street View',d:'Được thả vào 1 địa điểm bí ẩn trên thế giới qua Google Maps.'},
+     {i:'📍',t:'Đoán vị trí',d:'Nhìn xung quanh rồi ghim điểm trên bản đồ nhỏ.'},
+     {i:'🏆',t:'Chấm điểm',d:'Càng gần thật = điểm càng cao. Tối đa 5000 điểm/vòng.'},
+     {i:'💡',t:'Gợi ý',d:'Xem biển số xe, ngôn ngữ, kiến trúc, thực vật để suy luận.'},
+     {i:'🆓',t:'Free',d:'5 vòng/ngày miễn phí không cần tài khoản.'}]},
+  {id:'chess',name:'Chess.com',desc:'Cờ vua online với người chơi khắp thế giới!',
+   badge:'ESPORT',badgeCls:'badge-easy',btnGrad:'#4a7c3f,#1a3018',btnColor:'#fff',
+   url:'https://www.chess.com/play/online',
+   icon:'♟️',
+   rules:[
+     {i:'♟️',t:'Cờ vua chuẩn',d:'Chơi với người thật hoặc AI ở mọi cấp độ ELO.'},
+     {i:'⏱️',t:'Time Control',d:'Bullet 1 phút | Blitz 3-5 phút | Rapid 10-15 phút.'},
+     {i:'📊',t:'ELO Rating',d:'Thắng tăng điểm, thua giảm điểm. Leo rank từ 0 đến 3200.'},
+     {i:'🤖',t:'vs Máy',d:'Luyện tập với AI từ cấp 1 (siêu dễ) đến Magnus Carlsen.'},
+     {i:'🆓',t:'Free',d:'Miễn phí cơ bản. Premium có phân tích AI sâu hơn.'}]},
 ];
 
 // ═══════════════════════════════════════════════════════
@@ -1235,8 +1376,8 @@ function initFlappy(){const cv=$('fl-cv');if(!cv)return;flCtx=cv.getContext('2d'
 function drawFlappy(){if(!flCtx)return;const c=flCtx,W=360,H=380;
   const sg=c.createLinearGradient(0,0,0,H);sg.addColorStop(0,'#0a0a2a');sg.addColorStop(1,'#1a1a4a');
   c.fillStyle=sg;c.fillRect(0,0,W,H);
-  flPipes.forEach(p=>{c.fillStyle='#1a8a1a';c.fillRect(p.x,0,48,p.gap-10);c.fillRect(p.x,p.gap+130,48,H-p.gap-130);
-    c.fillStyle='#22aa22';c.fillRect(p.x-4,p.gap-20,56,20);c.fillRect(p.x-4,p.gap+120,56,20);});
+  flPipes.forEach(p=>{c.fillStyle='#1a8a1a';c.fillRect(p.x,0,48,p.gap-10);c.fillRect(p.x,p.gap+185,48,H-p.gap-185);
+    c.fillStyle='#22aa22';c.fillRect(p.x-4,p.gap-20,56,20);c.fillRect(p.x-4,p.gap+175,56,20);});
   c.fillStyle='#2a1a0a';c.fillRect(0,H-25,W,25);c.fillStyle='#3a2a0a';c.fillRect(0,H-25,W,4);
   const by=flBird.y;c.save();c.translate(70,by);c.rotate(Math.min(Math.max(flBird.vy*.05,-.5),.8));
   c.fillStyle='#ffe600';c.beginPath();c.ellipse(0,0,16,12,0,0,Math.PI*2);c.fill();
@@ -1249,16 +1390,16 @@ function drawFlappy(){if(!flCtx)return;const c=flCtx,W=360,H=380;
     c.font='13px Exo 2,sans-serif';c.fillStyle='rgba(255,255,255,.7)';c.fillText('Tap hoặc Space để bắt đầu',W/2,H/2+14);}
   c.fillStyle='#fff';c.font='bold 20px Orbitron,monospace';c.textAlign='center';c.fillText(flSc,W/2,32);}
 function flUpdate(){if(!flRun){drawFlappy();return;}const H=380;
-  flBird.vy+=0.45;flBird.y+=flBird.vy;
-  if(flPipes.length===0||flPipes[flPipes.length-1].x<240)flPipes.push({x:360,gap:80+Math.random()*150,scored:false});
-  flPipes.forEach(p=>{p.x-=2.5;if(!p.scored&&p.x+48<70){p.scored=true;flSc++;SFX.score();$('fl-sc')&&($('fl-sc').textContent=flSc);}});
+  flBird.vy+=0.19;flBird.y+=flBird.vy;
+  if(flPipes.length===0||flPipes[flPipes.length-1].x<270)flPipes.push({x:360,gap:90+Math.random()*120,scored:false});
+  flPipes.forEach(p=>{p.x-=1.7;if(!p.scored&&p.x+48<70){p.scored=true;flSc++;SFX.score();$('fl-sc')&&($('fl-sc').textContent=flSc);}});
   flPipes=flPipes.filter(p=>p.x>-60);
-  const dead=flBird.y<0||flBird.y>H-37||flPipes.some(p=>70+14>p.x&&70-14<p.x+48&&(flBird.y-12<p.gap-10||flBird.y+12>p.gap+130));
+  const dead=flBird.y<0||flBird.y>H-37||flPipes.some(p=>70+11>p.x&&70-11<p.x+48&&(flBird.y-10<p.gap-10||flBird.y+10>p.gap+185));
   if(dead){flRun=false;SFX.lose();if(flSc>flBest){flBest=flSc;localStorage.setItem('flB',flBest);$('fl-best')&&($('fl-best').textContent=flBest);}toast('💥 Flappy Over! Điểm: '+flSc);}
   drawFlappy();flAF=requestAnimationFrame(flUpdate);}
 function flapClick(){SFX.jump();
   if(!flStarted){flStarted=true;flRun=true;flAF=requestAnimationFrame(flUpdate);}
-  if(flRun)flBird.vy=-8.5;
+  if(flRun)flBird.vy=-6.0;
   else{flBird={y:190,vy:0};flPipes=[];flSc=0;flStarted=true;flRun=true;
     $('fl-sc')&&($('fl-sc').textContent='0');cancelAnimationFrame(flAF);flAF=requestAnimationFrame(flUpdate);}}
 cleanups.flappy=()=>{flRun=false;cancelAnimationFrame(flAF);}
@@ -1367,29 +1508,45 @@ function clearBlLines(){let cl=0;const rows=new Set(),cols=new Set();
   if(cl){SFX.clear();const m=cl>=3?3:cl>=2?2:1;const pts=cl*10*m;blSc+=pts;
     if(blSc>blBest){blBest=blSc;localStorage.setItem('blB',blBest);$('bl-best')&&($('bl-best').textContent=blBest);}
     $('bl-sc')&&($('bl-sc').textContent=blSc);if(cl>=2)toast(`🔥 COMBO ×${m}! +${pts}pts`);}}
-function renderBlBoard(){const b=$('block-board');if(!b)return;b.innerHTML='';
+function renderBlBoard(hovR,hovC){const b=$('block-board');if(!b)return;b.innerHTML='';
   for(let r=0;r<8;r++)for(let c=0;c<8;c++){const d=document.createElement('div');d.className='blc';
+    d.dataset.r=r;d.dataset.c=c;
+    let highlight=false;
+    if(hovR!==undefined&&blSel!==null){const{s,c:col}=blPcs[blSel];const dr=r-hovR,dc=c-hovC;
+      if(dr>=0&&dc>=0&&s[dr]?.[dc]){highlight=canBlPl(s,hovR,hovC);}}
     if(blGrid[r][c]){d.classList.add('filled');d.style.background=blGrid[r][c];
-      d.style.boxShadow=`inset 0 1px 0 rgba(255,255,255,.3),inset 0 -1px 0 rgba(0,0,0,.3)`;}
-    d.onclick=()=>blClick(r,c);
-    d.onmouseenter=()=>{if(blSel===null)return;renderBlBoard();const{s,c:col}=blPcs[blSel];if(!canBlPl(s,r,c))return;
-      document.querySelectorAll('.blc').forEach((el,i)=>{const cr=~~(i/8),cc=i%8;
-        if(s[cr-r]?.[cc-c]){el.style.background=col+'99';el.style.transform='scale(1.08)';}});};
-    d.onmouseleave=()=>renderBlBoard();b.appendChild(d);}}
-function blClick(r,c){if(blSel===null){toast('👆 Chọn mảnh ghép bên dưới trước!');return;}
+      d.style.boxShadow='inset 0 1px 0 rgba(255,255,255,.3),inset 0 -1px 0 rgba(0,0,0,.3)';}
+    if(highlight&&blSel!==null){const{c:col}=blPcs[blSel];
+      d.style.background=col+'cc';d.style.transform='scale(1.07)';d.style.boxShadow=`0 0 12px ${col}88`;d.style.zIndex='2';}
+    d.addEventListener('click',()=>blPlaceAt(r,c));
+    d.addEventListener('mouseenter',()=>renderBlBoard(r,c));
+    d.addEventListener('mouseleave',()=>renderBlBoard());
+    // Touch: track position to find cell under finger
+    d.addEventListener('touchend',e=>{e.preventDefault();e.stopPropagation();blPlaceAt(r,c);},{passive:false});
+    b.appendChild(d);}}
+function blPlaceAt(r,c){if(blSel===null){toast('👆 Chọn mảnh ghép bên dưới trước!');return;}
   const{s,c:col}=blPcs[blSel];if(!canBlPl(s,r,c)){SFX.lose();toast('❌ Không đặt được ở đây!');return;}
   SFX.place();plBlPc(s,col,r,c);blPcs[blSel]=null;clearBlLines();
   if(blPcs.every(p=>!p))genBlPcs();blSel=null;renderBlBoard();renderBlPcs();
-  if(blPcs.filter(p=>p).every(p=>{for(let r=0;r<=8-p.s.length;r++)for(let c=0;c<=8-p.s[0].length;c++)if(canBlPl(p.s,r,c))return false;return true;}))
+  if(blPcs.filter(p=>p).every(p=>{for(let r2=0;r2<=8-p.s.length;r2++)for(let c2=0;c2<=8-p.s[0].length;c2++)if(canBlPl(p.s,r2,c2))return false;return true;}))
     {SFX.lose();toast('😵 Hết nước đi! Điểm: '+blSc);setTimeout(initBlock,2000);}}
 function renderBlPcs(){const cont=$('bpcs');if(!cont)return;cont.innerHTML='';
-  blPcs.forEach((p,i)=>{if(!p){const e=document.createElement('div');e.style.width='70px';cont.appendChild(e);return;}
+  blPcs.forEach((p,i)=>{if(!p){const e=document.createElement('div');e.style.cssText='min-width:60px;flex-shrink:0';cont.appendChild(e);return;}
+    const wrap=document.createElement('div');wrap.style.cssText='display:flex;flex-direction:column;align-items:center;gap:5px';
     const d=document.createElement('div');d.className='bpc';if(blSel===i)d.classList.add('sel');
+    if(blSel===i)d.style.cssText='outline:2.5px solid #ffe600;outline-offset:4px;box-shadow:0 0 16px rgba(255,220,0,.4)';
     const g=document.createElement('div');g.className='pmg';g.style.gridTemplateColumns=`repeat(${p.s[0].length},18px)`;
     p.s.forEach(row=>row.forEach(v=>{const c=document.createElement('div');c.className='pmc';
-      c.style.background=v?p.c:'transparent';c.style.boxShadow=v?`0 0 4px ${p.c}88`:'none';g.appendChild(c);}));
-    d.appendChild(g);d.onclick=()=>{SFX.click();blSel=(blSel===i)?null:i;renderBlPcs();renderBlBoard();};
-    cont.appendChild(d);});}
+      c.style.background=v?p.c:'transparent';c.style.boxShadow=v?`0 0 5px ${p.c}99`:'none';g.appendChild(c);}));
+    d.appendChild(g);
+    const lbl=document.createElement('div');lbl.style.cssText='font-size:.62rem;color:rgba(255,255,255,.4);font-family:Orbitron,monospace;letter-spacing:.05em';
+    lbl.textContent=blSel===i?'✓ ĐÃ CHỌN':'TAP ĐỂ CHỌN';
+    const fn=ev=>{ev.stopPropagation();SFX.click();blSel=(blSel===i)?null:i;
+      if(blSel!==null)toast('✅ Đã chọn! Tap ô trên bảng để đặt mảnh');
+      renderBlPcs();renderBlBoard();};
+    d.addEventListener('click',fn);
+    d.addEventListener('touchend',e=>{e.preventDefault();fn(e);},{passive:false});
+    wrap.appendChild(d);wrap.appendChild(lbl);cont.appendChild(wrap);});}
 
 // ═══════════════════════════════════════════════════════
 // TIC TAC TOE (Minimax AI)
@@ -1762,7 +1919,98 @@ document.addEventListener('touchend',e=>{
 // Flappy touch
 document.addEventListener('touchend',e=>{if($('modal-flappy')?.classList.contains('active')){flapClick();}},{passive:true});
 
-console.log('🎮 ARCADE ZONE v3 — 16 Games loaded!');
-</script>
-</body>
-</html>
+console.log('🎮 ARCADE ZONE v4 — 16 Games + Lofi + External Games loaded!');
+
+// ═══════════════════════════════════════════════════════
+// EXTERNAL GAMES — Render Cards + Iframe Modals
+// ═══════════════════════════════════════════════════════
+(function(){
+  const grid=document.getElementById('game-grid');
+  const mroot=document.getElementById('modals-root');
+
+  EXT_GAMES.forEach((g,idx)=>{
+    // Card
+    const card=document.createElement('div');
+    card.className='gc gcx';card.style.setProperty('--i',16+idx);
+    card.onclick=()=>{SFX.click();openExtGame(g.id);};
+    const [g1,g2]=g.btnGrad.split(',');
+    card.innerHTML=`
+      <div class="cbanner" style="height:168px;background:linear-gradient(135deg,${g1}44,${g2}88);
+        display:flex;align-items:center;justify-content:center;font-size:4rem;position:relative">
+        ${g.icon}
+        <div class="cbanner-overlay"></div>
+        <span class="cbadge badge-ext">${g.badge}</span>
+      </div>
+      <div class="cd">
+        <div class="ct">${g.name}</div>
+        <div class="cdesc">${g.desc}</div>
+        <button class="play-btn" style="background:linear-gradient(135deg,${g1},${g2});color:${g.btnColor};box-shadow:0 4px 20px rgba(0,0,0,.4)">
+          🌐 MỞ GAME
+        </button>
+      </div>`;
+    grid.appendChild(card);
+
+    // Modal
+    const mo=document.createElement('div');mo.className='mo';mo.id='extmo-'+g.id;
+    mo.innerHTML=`
+      <div class="md wide" style="max-width:900px">
+        <div class="mh">
+          <div class="mt">${g.icon} ${g.name}</div>
+          <div class="mh-btns">
+            <button class="mbtn help-btn" onclick="toggleExtHelp('${g.id}')" title="Hướng dẫn">?</button>
+            <button class="mbtn" onclick="openNewTab('${g.url}')" title="Mở tab mới" style="background:rgba(0,200,255,.12);border:1px solid rgba(0,200,255,.2)">↗</button>
+            <button class="mbtn close-btn" onclick="closeExtGame('${g.id}')">✕</button>
+          </div>
+        </div>
+        <div style="padding:14px">
+          <div class="iframe-game" id="ifwrap-${g.id}">
+            <div class="iframe-cover" id="ifcover-${g.id}">
+              <div class="iframe-icon">${g.icon}</div>
+              <h3>${g.name}</h3>
+              <p>${g.desc}</p>
+              <button class="iframe-start-btn" onclick="startExtGame('${g.id}','${g.url}')">▶ BẮT ĐẦU CHƠI</button>
+              <div style="font-size:.72rem;color:rgba(255,255,255,.3);text-align:center;max-width:260px;line-height:1.8">
+                Nhấn nút để tải game • Cần kết nối internet<br>
+                <button onclick="openNewTab('${g.url}')" style="margin-top:6px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);color:rgba(255,255,255,.6);padding:5px 14px;border-radius:6px;cursor:pointer;font-size:.7rem">↗ Mở trong tab mới</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="help-overlay" id="exthelp-${g.id}">
+          <button class="mbtn close-btn" style="position:absolute;top:16px;right:16px" onclick="toggleExtHelp('${g.id}')">✕</button>
+          <h3 style="font-family:Orbitron,monospace;font-size:1rem;color:var(--c1);letter-spacing:.15em;margin-bottom:16px;text-transform:uppercase">📖 Hướng dẫn: ${g.name}</h3>
+          ${g.rules.map(r=>`<div class="rule-item"><span class="ri">${r.i}</span><p><b>${r.t}:</b> ${r.d}</p></div>`).join('')}
+        </div>
+      </div>`;
+    mo.onclick=e=>{if(e.target===mo)closeExtGame(g.id);};
+    mroot.appendChild(mo);
+  });
+})();
+
+function openExtGame(id){
+  const mo=document.getElementById('extmo-'+id);
+  if(mo){mo.classList.add('active');document.body.style.overflow='hidden';}
+  SFX.click();
+}
+function closeExtGame(id){
+  const mo=document.getElementById('extmo-'+id);
+  if(mo){mo.classList.remove('active');document.body.style.overflow='';}
+  // Remove iframe to stop loading
+  const wrap=document.getElementById('ifwrap-'+id);
+  if(wrap){const ifrm=wrap.querySelector('iframe');if(ifrm){ifrm.src='about:blank';ifrm.remove();}}
+  const cov=document.getElementById('ifcover-'+id);if(cov)cov.classList.remove('hidden');
+}
+function startExtGame(id,url){
+  const wrap=document.getElementById('ifwrap-'+id);
+  const cover=document.getElementById('ifcover-'+id);
+  if(!wrap)return;
+  cover.classList.add('hidden');
+  const ifrm=document.createElement('iframe');
+  ifrm.src=url;ifrm.allow='fullscreen';ifrm.allowFullscreen=true;
+  ifrm.style.cssText='width:100%;height:100%;border:none;border-radius:12px';
+  ifrm.setAttribute('sandbox','allow-same-origin allow-scripts allow-forms allow-popups allow-pointer-lock');
+  wrap.appendChild(ifrm);
+  toast('🌐 Game đang tải... Nhấn ↗ nếu cần mở tab mới');
+}
+function openNewTab(url){window.open(url,'_blank','noopener');}
+function toggleExtHelp(id){
