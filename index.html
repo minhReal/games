@@ -5,7 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>JSCipher</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/javascript-obfuscator/4.0.0/index.browser.js"></script>
+<!-- FIX: dùng jsdelivr thay cdnjs, đúng path dist/index.browser.js -->
+<script src="https://cdn.jsdelivr.net/npm/javascript-obfuscator@4.0.0/dist/index.browser.js"></script>
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
@@ -25,374 +26,176 @@
 }
 
 html, body { height: 100%; }
-
-body {
-  font-family: var(--sans);
-  background: var(--bg);
-  color: var(--text);
-  font-size: 15px;
-  line-height: 1.5;
-}
-
+body { font-family: var(--sans); background: var(--bg); color: var(--text); font-size: 15px; line-height: 1.5; }
 .app { display: flex; flex-direction: column; min-height: 100vh; }
 
-/* Header */
 .header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 14px 16px;
-  border-bottom: 1px solid var(--border);
-  background: var(--surface);
-  position: sticky;
-  top: 0;
-  z-index: 50;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 16px; border-bottom: 1px solid var(--border);
+  background: var(--surface); position: sticky; top: 0; z-index: 50;
 }
-
 .brand { display: flex; align-items: center; gap: 10px; }
-
 .brand-icon {
-  width: 32px; height: 32px;
-  background: var(--accent);
-  border-radius: 8px;
+  width: 32px; height: 32px; background: var(--accent); border-radius: 8px;
   display: flex; align-items: center; justify-content: center;
-  font-family: var(--mono);
-  font-weight: 500;
-  font-size: 13px;
-  color: white;
+  font-family: var(--mono); font-weight: 500; font-size: 13px; color: white;
 }
-
 .brand-name { font-size: 16px; font-weight: 600; letter-spacing: -0.3px; }
 .brand-sub { font-size: 11px; color: var(--muted); margin-top: 1px; }
 
-/* Tabs */
+/* lib status badge */
+.lib-status {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 11px; font-family: var(--mono);
+}
+.lib-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--yellow); }
+.lib-dot.ok { background: var(--green); }
+.lib-dot.err { background: var(--red); }
+
 .tabs {
-  display: flex;
-  background: var(--surface);
-  border-bottom: 1px solid var(--border);
-  padding: 0 16px;
-  overflow-x: auto;
-  scrollbar-width: none;
+  display: flex; background: var(--surface);
+  border-bottom: 1px solid var(--border); padding: 0 16px;
+  overflow-x: auto; scrollbar-width: none;
 }
 .tabs::-webkit-scrollbar { display: none; }
 
 .tab {
-  padding: 12px 16px;
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--muted);
-  cursor: pointer;
-  border: none;
-  background: none;
-  white-space: nowrap;
-  border-bottom: 2px solid transparent;
-  transition: all 0.15s;
-  font-family: var(--sans);
+  padding: 12px 16px; font-size: 13px; font-weight: 500; color: var(--muted);
+  cursor: pointer; border: none; background: none; white-space: nowrap;
+  border-bottom: 2px solid transparent; transition: all 0.15s; font-family: var(--sans);
 }
-
 .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
 .tab:hover:not(.active) { color: var(--text); }
 
-/* Content */
 .content { flex: 1; padding: 16px; max-width: 800px; margin: 0 auto; width: 100%; }
 
 .page { display: none; flex-direction: column; gap: 12px; }
 .page.active { display: flex; }
 
-/* Cards */
-.card {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  overflow: hidden;
-}
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
 
 .card-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 12px 14px;
-  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 14px; border-bottom: 1px solid var(--border);
 }
-
-.card-title {
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.5px;
-  text-transform: uppercase;
-  color: var(--muted);
-}
-
+.card-title { font-size: 12px; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase; color: var(--muted); }
 .card-actions { display: flex; gap: 6px; }
 
-/* Textarea */
 textarea {
-  width: 100%;
-  background: transparent;
-  border: none;
-  color: var(--text);
-  font-family: var(--mono);
-  font-size: 13px;
-  line-height: 1.6;
-  padding: 14px;
-  resize: none;
-  outline: none;
-  min-height: 180px;
+  width: 100%; background: transparent; border: none; color: var(--text);
+  font-family: var(--mono); font-size: 13px; line-height: 1.6;
+  padding: 14px; resize: none; outline: none; min-height: 180px;
 }
-
 textarea::placeholder { color: var(--muted); }
 #outputCode { color: #7dd3fc; min-height: 160px; }
 
-/* Buttons */
 .btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 7px 12px;
-  font-size: 12px;
-  font-weight: 500;
-  font-family: var(--sans);
-  border-radius: 7px;
-  border: 1px solid var(--border);
-  background: transparent;
-  color: var(--muted);
-  cursor: pointer;
-  transition: all 0.15s;
-  white-space: nowrap;
+  display: inline-flex; align-items: center; gap: 6px; padding: 7px 12px;
+  font-size: 12px; font-weight: 500; font-family: var(--sans);
+  border-radius: 7px; border: 1px solid var(--border); background: transparent;
+  color: var(--muted); cursor: pointer; transition: all 0.15s; white-space: nowrap;
 }
 .btn:hover { color: var(--text); border-color: #444; }
 .btn:active { transform: scale(0.97); }
 
 .btn-primary {
-  background: var(--accent);
-  border-color: var(--accent);
-  color: white;
-  font-size: 14px;
-  padding: 13px 20px;
-  width: 100%;
-  justify-content: center;
-  border-radius: 10px;
-  font-weight: 600;
+  background: var(--accent); border-color: var(--accent); color: white;
+  font-size: 14px; padding: 13px 20px; width: 100%; justify-content: center;
+  border-radius: 10px; font-weight: 600;
 }
 .btn-primary:hover { background: #7c75ff; border-color: #7c75ff; color: white; }
+.btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
 
-/* Stats */
-.stats {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 8px;
-}
-
-.stat {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 12px;
-  text-align: center;
-}
-
-.stat-val {
-  font-family: var(--mono);
-  font-size: 18px;
-  font-weight: 500;
-  color: var(--accent);
-}
-
+.stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.stat { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 12px; text-align: center; }
+.stat-val { font-family: var(--mono); font-size: 18px; font-weight: 500; color: var(--accent); }
 .stat-label { font-size: 11px; color: var(--muted); margin-top: 2px; }
 
-/* Presets */
-.presets {
-  display: flex;
-  gap: 6px;
-  flex-wrap: wrap;
-  padding: 12px 14px;
-  border-bottom: 1px solid var(--border);
-}
-
+.presets { display: flex; gap: 6px; flex-wrap: wrap; padding: 12px 14px; border-bottom: 1px solid var(--border); }
 .pill {
-  padding: 5px 13px;
-  font-size: 12px;
-  font-weight: 500;
-  border-radius: 20px;
-  border: 1px solid var(--border);
-  background: transparent;
-  color: var(--muted);
-  cursor: pointer;
-  transition: all 0.15s;
-  font-family: var(--sans);
+  padding: 5px 13px; font-size: 12px; font-weight: 500; border-radius: 20px;
+  border: 1px solid var(--border); background: transparent; color: var(--muted);
+  cursor: pointer; transition: all 0.15s; font-family: var(--sans);
 }
-.pill.active, .pill:hover {
-  background: var(--accent-dim);
-  border-color: var(--accent);
-  color: var(--accent);
-}
+.pill.active, .pill:hover { background: var(--accent-dim); border-color: var(--accent); color: var(--accent); }
 
-/* Options */
-.section-label {
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.5px;
-  text-transform: uppercase;
-  color: var(--muted);
-  padding: 12px 14px 6px;
-}
+.section-label { font-size: 11px; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase; color: var(--muted); padding: 12px 14px 6px; }
 
-.opt {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 10px 14px;
-  gap: 12px;
-}
+.opt { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; gap: 12px; }
 .opt + .opt { border-top: 1px solid var(--border); }
 .opt-info { flex: 1; min-width: 0; }
 .opt-name { font-size: 13px; font-weight: 500; }
 .opt-desc { font-size: 11px; color: var(--muted); margin-top: 2px; }
 
-/* Toggle */
 .toggle { position: relative; width: 40px; height: 22px; flex-shrink: 0; cursor: pointer; }
 .toggle input { opacity: 0; width: 0; height: 0; position: absolute; }
-.toggle-track {
-  position: absolute; inset: 0;
-  background: var(--border);
-  border-radius: 22px;
-  transition: background 0.2s;
-}
-.toggle-thumb {
-  position: absolute;
-  width: 16px; height: 16px;
-  background: #666;
-  border-radius: 50%;
-  top: 3px; left: 3px;
-  transition: all 0.2s;
-  pointer-events: none;
-}
+.toggle-track { position: absolute; inset: 0; background: var(--border); border-radius: 22px; transition: background 0.2s; }
+.toggle-thumb { position: absolute; width: 16px; height: 16px; background: #666; border-radius: 50%; top: 3px; left: 3px; transition: all 0.2s; pointer-events: none; }
 .toggle input:checked ~ .toggle-track { background: var(--accent); }
 .toggle input:checked ~ .toggle-thumb { left: 21px; background: white; }
 
-/* Select */
 .opt-select {
-  background: var(--bg);
-  border: 1px solid var(--border);
-  color: var(--text);
-  padding: 5px 8px;
-  font-size: 12px;
-  font-family: var(--mono);
-  border-radius: 7px;
-  outline: none;
-  cursor: pointer;
+  background: var(--bg); border: 1px solid var(--border); color: var(--text);
+  padding: 5px 8px; font-size: 12px; font-family: var(--mono);
+  border-radius: 7px; outline: none; cursor: pointer;
 }
 .opt-select:focus { border-color: var(--accent); }
 
-/* Fields */
 .fields { display: flex; flex-direction: column; gap: 10px; padding: 14px; }
-
-.field label {
-  display: block;
-  font-size: 12px;
-  font-weight: 500;
-  color: var(--muted);
-  margin-bottom: 5px;
-}
-
+.field label { display: block; font-size: 12px; font-weight: 500; color: var(--muted); margin-bottom: 5px; }
 .field input {
-  width: 100%;
-  background: var(--bg);
-  border: 1px solid var(--border);
-  color: var(--text);
-  padding: 10px 12px;
-  font-family: var(--mono);
-  font-size: 13px;
-  border-radius: 8px;
-  outline: none;
-  transition: border-color 0.15s;
-  -webkit-appearance: none;
+  width: 100%; background: var(--bg); border: 1px solid var(--border); color: var(--text);
+  padding: 10px 12px; font-family: var(--mono); font-size: 13px;
+  border-radius: 8px; outline: none; transition: border-color 0.15s; -webkit-appearance: none;
 }
 .field input:focus { border-color: var(--accent); }
 .field input::placeholder { color: var(--muted); }
 
-/* Log */
-.log {
-  font-family: var(--mono);
-  font-size: 12px;
-  line-height: 1.8;
-  padding: 12px 14px;
-  min-height: 80px;
-  color: var(--muted);
-}
+.log { font-family: var(--mono); font-size: 12px; line-height: 1.8; padding: 12px 14px; min-height: 80px; color: var(--muted); }
 .log-ok   { color: var(--green); }
 .log-err  { color: var(--red); }
 .log-info { color: var(--accent); }
 .log-warn { color: var(--yellow); }
 
-/* Spinner */
 .spinner {
-  display: none;
-  width: 15px; height: 15px;
-  border: 2px solid rgba(255,255,255,0.3);
-  border-top-color: white;
-  border-radius: 50%;
-  animation: spin 0.7s linear infinite;
+  display: none; width: 15px; height: 15px;
+  border: 2px solid rgba(255,255,255,0.3); border-top-color: white;
+  border-radius: 50%; animation: spin 0.7s linear infinite;
 }
 .spinner.show { display: inline-block; }
 @keyframes spin { to { transform: rotate(360deg); } }
 
-/* Toast */
 .toast {
-  position: fixed;
-  bottom: 20px;
-  left: 50%;
+  position: fixed; bottom: 20px; left: 50%;
   transform: translateX(-50%) translateY(80px);
-  background: var(--surface);
-  border: 1px solid var(--border);
-  color: var(--text);
-  padding: 10px 18px;
-  border-radius: 10px;
-  font-size: 13px;
-  font-weight: 500;
-  white-space: nowrap;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+  background: var(--surface); border: 1px solid var(--border); color: var(--text);
+  padding: 10px 18px; border-radius: 10px; font-size: 13px; font-weight: 500;
+  white-space: nowrap; box-shadow: 0 8px 32px rgba(0,0,0,0.5);
   transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1), opacity 0.3s;
-  opacity: 0;
-  z-index: 999;
-  max-width: calc(100vw - 32px);
-  overflow: hidden;
-  text-overflow: ellipsis;
+  opacity: 0; z-index: 999; max-width: calc(100vw - 32px); overflow: hidden; text-overflow: ellipsis;
 }
 .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
-.toast.ok   { border-color: var(--green);  color: var(--green);  }
-.toast.err  { border-color: var(--red);    color: var(--red);    }
+.toast.ok   { border-color: var(--green);  color: var(--green); }
+.toast.err  { border-color: var(--red);    color: var(--red); }
 .toast.info { border-color: var(--accent); color: var(--accent); }
 
-/* Info box */
-.info-box {
-  background: rgba(108,99,255,0.08);
-  border: 1px solid rgba(108,99,255,0.2);
-  border-radius: 10px;
-  padding: 12px 14px;
-  font-size: 13px;
-  color: var(--muted);
-  line-height: 1.6;
-}
+.info-box { background: rgba(108,99,255,0.08); border: 1px solid rgba(108,99,255,0.2); border-radius: 10px; padding: 12px 14px; font-size: 13px; color: var(--muted); line-height: 1.6; }
 .info-box a { color: var(--accent); text-decoration: none; }
 
-/* File btn */
 .file-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 7px 12px;
-  font-size: 12px;
-  font-weight: 500;
-  font-family: var(--sans);
-  border-radius: 7px;
-  border: 1px solid var(--border);
-  background: transparent;
-  color: var(--muted);
-  cursor: pointer;
-  transition: all 0.15s;
+  display: inline-flex; align-items: center; gap: 6px; padding: 7px 12px;
+  font-size: 12px; font-weight: 500; font-family: var(--sans);
+  border-radius: 7px; border: 1px solid var(--border); background: transparent;
+  color: var(--muted); cursor: pointer; transition: all 0.15s;
 }
 .file-btn:hover { color: var(--text); border-color: #444; }
+
+/* Error banner */
+.err-banner {
+  display: none; background: rgba(239,68,68,0.1); border: 1px solid var(--red);
+  border-radius: 10px; padding: 12px 14px; font-size: 13px; color: var(--red); line-height: 1.6;
+}
+.err-banner.show { display: block; }
 
 @media (max-width: 480px) {
   .content { padding: 12px; }
@@ -413,6 +216,10 @@ textarea::placeholder { color: var(--muted); }
         <div class="brand-sub">JavaScript Obfuscator</div>
       </div>
     </div>
+    <div class="lib-status">
+      <div class="lib-dot" id="libDot"></div>
+      <span id="libLabel" style="color:var(--muted)">Loading...</span>
+    </div>
   </div>
 
   <div class="tabs">
@@ -423,41 +230,29 @@ textarea::placeholder { color: var(--muted); }
 
   <div class="content">
 
+    <!-- LIB ERROR BANNER -->
+    <div class="err-banner" id="errBanner">
+      ⚠️ Không tải được thư viện mã hoá. Kiểm tra kết nối mạng rồi tải lại trang.<br>
+      <small style="opacity:0.7">Lỗi: <span id="errMsg"></span></small>
+    </div>
+
     <!-- PAGE: MÃ HOÁ -->
     <div id="page-obfuscate" class="page active">
-
       <div class="stats">
-        <div class="stat">
-          <div class="stat-val" id="inputSize">0B</div>
-          <div class="stat-label">Input</div>
-        </div>
-        <div class="stat">
-          <div class="stat-val" id="outputSize">0B</div>
-          <div class="stat-label">Output</div>
-        </div>
-        <div class="stat">
-          <div class="stat-val" id="protection">TB</div>
-          <div class="stat-label">Mức độ</div>
-        </div>
+        <div class="stat"><div class="stat-val" id="inputSize">0B</div><div class="stat-label">Input</div></div>
+        <div class="stat"><div class="stat-val" id="outputSize">0B</div><div class="stat-label">Output</div></div>
+        <div class="stat"><div class="stat-val" id="protection">TB</div><div class="stat-label">Mức độ</div></div>
       </div>
 
       <div class="card">
         <div class="card-header">
           <span class="card-title">Code gốc</span>
           <div class="card-actions">
-            <label class="file-btn">
-              📁 Upload
-              <input type="file" accept=".js,.ts,.txt" style="display:none" onchange="loadFile(event)">
-            </label>
+            <label class="file-btn">📁 Upload<input type="file" accept=".js,.ts,.txt" style="display:none" onchange="loadFile(event)"></label>
             <button class="btn" onclick="clearAll()">Xoá</button>
           </div>
         </div>
-        <textarea id="inputCode"
-          placeholder="// Dán JavaScript vào đây..."
-          oninput="updateStats()"
-          spellcheck="false"
-          autocorrect="off"
-          autocapitalize="off"></textarea>
+        <textarea id="inputCode" placeholder="// Dán JavaScript vào đây..." oninput="updateStats()" spellcheck="false" autocorrect="off" autocapitalize="off"></textarea>
       </div>
 
       <button class="btn btn-primary" onclick="obfuscate()" id="encryptBtn">
@@ -474,16 +269,12 @@ textarea::placeholder { color: var(--muted); }
             <button class="btn" onclick="sendToGitHub()">🐙</button>
           </div>
         </div>
-        <textarea id="outputCode" readonly
-          placeholder="// Kết quả hiện ở đây..."
-          spellcheck="false"></textarea>
+        <textarea id="outputCode" readonly placeholder="// Kết quả hiện ở đây..." spellcheck="false"></textarea>
       </div>
-
     </div>
 
     <!-- PAGE: TUỲ CHỌN -->
     <div id="page-options" class="page">
-
       <div class="card">
         <div class="card-header"><span class="card-title">Preset nhanh</span></div>
         <div class="presets">
@@ -565,50 +356,27 @@ textarea::placeholder { color: var(--muted); }
           <label class="toggle"><input type="checkbox" id="opt_numbers"><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
         </div>
       </div>
-
     </div>
 
     <!-- PAGE: GITHUB -->
     <div id="page-github" class="page">
-
       <div class="card">
         <div class="card-header">
           <span class="card-title">Nội dung file</span>
           <button class="btn" onclick="loadFromObfuscator()">← Lấy từ Mã Hoá</button>
         </div>
-        <textarea id="ghContent" style="color:#7dd3fc; min-height:130px"
-          placeholder="// Code cần upload..."
-          spellcheck="false"
-          autocapitalize="off"></textarea>
+        <textarea id="ghContent" style="color:#7dd3fc; min-height:130px" placeholder="// Code cần upload..." spellcheck="false" autocapitalize="off"></textarea>
       </div>
 
       <div class="card">
         <div class="card-header"><span class="card-title">Cấu hình GitHub</span></div>
         <div class="fields">
-          <div class="field">
-            <label>Personal Access Token</label>
-            <input type="password" id="ghToken" placeholder="ghp_xxxxxxxxxxxxxxxx" autocomplete="off">
-          </div>
-          <div class="field">
-            <label>Username / Owner</label>
-            <input type="text" id="ghOwner" placeholder="your-username" autocomplete="off" autocapitalize="off">
-          </div>
-          <div class="field">
-            <label>Repository</label>
-            <input type="text" id="ghRepo" placeholder="my-repo" autocapitalize="off">
-          </div>
-          <div class="field">
-            <label>Branch</label>
-            <input type="text" id="ghBranch" value="main" autocapitalize="off">
-          </div>
-          <div class="field">
-            <label>Đường dẫn file trong repo</label>
-            <input type="text" id="ghPath" placeholder="src/app.js" autocapitalize="off">
-          </div>
-          <div class="field">
-            <label>Commit message</label>
-            <input type="text" id="ghMessage" value="feat: add obfuscated JS via JSCipher">
-          </div>
+          <div class="field"><label>Personal Access Token</label><input type="password" id="ghToken" placeholder="ghp_xxxxxxxxxxxxxxxx" autocomplete="off"></div>
+          <div class="field"><label>Username / Owner</label><input type="text" id="ghOwner" placeholder="your-username" autocomplete="off" autocapitalize="off"></div>
+          <div class="field"><label>Repository</label><input type="text" id="ghRepo" placeholder="my-repo" autocapitalize="off"></div>
+          <div class="field"><label>Branch</label><input type="text" id="ghBranch" value="main" autocapitalize="off"></div>
+          <div class="field"><label>Đường dẫn file trong repo</label><input type="text" id="ghPath" placeholder="src/app.js" autocapitalize="off"></div>
+          <div class="field"><label>Commit message</label><input type="text" id="ghMessage" value="feat: add obfuscated JS via JSCipher"></div>
           <button class="btn btn-primary" onclick="uploadToGitHub()" id="uploadBtn">
             <div class="spinner" id="uploadSpinner"></div>
             <span id="uploadBtnText">🐙 Upload lên GitHub</span>
@@ -629,14 +397,35 @@ textarea::placeholder { color: var(--muted); }
         </div>
         <div class="log" id="statusLog">Sẵn sàng...</div>
       </div>
-
     </div>
+
   </div>
 </div>
 
 <div class="toast" id="toast"></div>
 
 <script>
+// ── Kiểm tra thư viện sau khi trang load ──────────────────────────────────
+window.addEventListener('load', () => {
+  const dot   = document.getElementById('libDot');
+  const label = document.getElementById('libLabel');
+  const banner = document.getElementById('errBanner');
+
+  if (typeof JavaScriptObfuscator !== 'undefined') {
+    dot.classList.add('ok');
+    label.textContent = 'Sẵn sàng';
+    label.style.color = 'var(--green)';
+  } else {
+    dot.classList.add('err');
+    label.textContent = 'Lỗi thư viện';
+    label.style.color = 'var(--red)';
+    banner.classList.add('show');
+    document.getElementById('errMsg').textContent = 'JavaScriptObfuscator is not defined — tải lại trang hoặc kiểm tra mạng.';
+    document.getElementById('encryptBtn').disabled = true;
+  }
+});
+
+// ── Tabs ──────────────────────────────────────────────────────────────────
 function switchTab(name, el) {
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
@@ -644,10 +433,11 @@ function switchTab(name, el) {
   document.getElementById('page-' + name).classList.add('active');
 }
 
+// ── Stats ─────────────────────────────────────────────────────────────────
 function formatBytes(b) {
   if (!b) return '0B';
   if (b < 1024) return b + 'B';
-  return (b/1024).toFixed(1) + 'K';
+  return (b / 1024).toFixed(1) + 'K';
 }
 
 function updateStats() {
@@ -657,68 +447,73 @@ function updateStats() {
   document.getElementById('outputSize').textContent = formatBytes(new Blob([o]).size);
 }
 
+// ── Presets ───────────────────────────────────────────────────────────────
+const PRESETS = {
+  low:    { compact:true, rename:'hexadecimal', sa:true,  shuffle:false, enc:'none',   cf:false, dc:false, self:false, dbg:false, con:false, uni:false, split:false, num:false, label:'CB'  },
+  medium: { compact:true, rename:'hexadecimal', sa:true,  shuffle:true,  enc:'base64', cf:false, dc:false, self:false, dbg:false, con:false, uni:false, split:false, num:false, label:'TB'  },
+  high:   { compact:true, rename:'hexadecimal', sa:true,  shuffle:true,  enc:'rc4',   cf:true,  dc:false, self:true,  dbg:true,  con:false, uni:true,  split:true,  num:true,  label:'Cao' },
+  max:    { compact:true, rename:'mangled-shuffled', sa:true, shuffle:true, enc:'rc4', cf:true,  dc:true,  self:true,  dbg:true,  con:true,  uni:true,  split:true,  num:true,  label:'Max' }
+};
+
 function applyPreset(level, btn) {
   document.querySelectorAll('.pill').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
-  const labels = { low:'CB', medium:'TB', high:'Cao', max:'Max' };
-  document.getElementById('protection').textContent = labels[level];
-
-  const p = {
-    low:    [true,'hexadecimal',true,false,false,'none',  false,false,false,false,false,false,false,false],
-    medium: [true,'hexadecimal',true,true, true, 'base64',false,false,false,false,false,false,false,false],
-    high:   [true,'hexadecimal',true,true, true, 'rc4',   true, true, false,true, false,true, true, true ],
-    max:    [true,'mangled-shuffled',true,true,true,'rc4', true, true, true, true, true, true, true, true ]
-  }[level];
-
-  const ids=['opt_compact','opt_rename','opt_stringArray','opt_shuffleStringArray',
-    'opt_shuffleStringArray','opt_stringEncoding','opt_controlFlow','opt_deadCode',
-    'opt_selfDefending','opt_debugProtection','opt_disableConsole',
-    'opt_unicode','opt_splitStrings','opt_numbers'];
-
-  // Manual set
-  document.getElementById('opt_compact').checked           = p[0];
-  document.getElementById('opt_rename').value              = p[1];
-  document.getElementById('opt_stringArray').checked       = p[2];
-  document.getElementById('opt_shuffleStringArray').checked= p[4];
-  document.getElementById('opt_stringEncoding').value      = p[5];
-  document.getElementById('opt_controlFlow').checked       = p[6];
-  document.getElementById('opt_deadCode').checked          = p[7];
-  document.getElementById('opt_selfDefending').checked     = p[8];
-  document.getElementById('opt_debugProtection').checked   = p[9];
-  document.getElementById('opt_disableConsole').checked    = p[10];
-  document.getElementById('opt_unicode').checked           = p[11];
-  document.getElementById('opt_splitStrings').checked      = p[12];
-  document.getElementById('opt_numbers').checked           = p[13];
+  const p = PRESETS[level];
+  document.getElementById('protection').textContent = p.label;
+  document.getElementById('opt_compact').checked           = p.compact;
+  document.getElementById('opt_rename').value              = p.rename;
+  document.getElementById('opt_stringArray').checked       = p.sa;
+  document.getElementById('opt_shuffleStringArray').checked= p.shuffle;
+  document.getElementById('opt_stringEncoding').value      = p.enc;
+  document.getElementById('opt_controlFlow').checked       = p.cf;
+  document.getElementById('opt_deadCode').checked          = p.dc;
+  document.getElementById('opt_selfDefending').checked     = p.self;
+  document.getElementById('opt_debugProtection').checked   = p.dbg;
+  document.getElementById('opt_disableConsole').checked    = p.con;
+  document.getElementById('opt_unicode').checked           = p.uni;
+  document.getElementById('opt_splitStrings').checked      = p.split;
+  document.getElementById('opt_numbers').checked           = p.num;
 }
 
+// ── Obfuscate ─────────────────────────────────────────────────────────────
 function obfuscate() {
+  // Kiểm tra thư viện lần nữa trước khi chạy
+  if (typeof JavaScriptObfuscator === 'undefined') {
+    toast('❌ Thư viện chưa tải xong. Tải lại trang!', 'err');
+    return;
+  }
+
   const code = document.getElementById('inputCode').value.trim();
   if (!code) { toast('Hãy nhập JavaScript!', 'err'); return; }
+
   setLoading(true);
+  // Dùng setTimeout để UI kịp cập nhật trước khi chạy nặng
   setTimeout(() => {
     try {
       const enc = document.getElementById('opt_stringEncoding').value;
-      const result = JavaScriptObfuscator.obfuscate(code, {
-        compact: document.getElementById('opt_compact').checked,
-        identifierNamesGenerator: document.getElementById('opt_rename').value,
-        stringArray: document.getElementById('opt_stringArray').checked,
-        rotateStringArray: document.getElementById('opt_stringArray').checked,
-        shuffleStringArray: document.getElementById('opt_shuffleStringArray').checked,
-        stringArrayEncoding: enc === 'none' ? [] : [enc],
-        selfDefending: document.getElementById('opt_selfDefending').checked,
-        controlFlowFlattening: document.getElementById('opt_controlFlow').checked,
+      const opts = {
+        compact:                    document.getElementById('opt_compact').checked,
+        identifierNamesGenerator:   document.getElementById('opt_rename').value,
+        stringArray:                document.getElementById('opt_stringArray').checked,
+        rotateStringArray:          document.getElementById('opt_stringArray').checked,
+        shuffleStringArray:         document.getElementById('opt_shuffleStringArray').checked,
+        stringArrayEncoding:        enc === 'none' ? [] : [enc],
+        selfDefending:              document.getElementById('opt_selfDefending').checked,
+        controlFlowFlattening:      document.getElementById('opt_controlFlow').checked,
         controlFlowFlatteningThreshold: 0.75,
-        deadCodeInjection: document.getElementById('opt_deadCode').checked,
+        deadCodeInjection:          document.getElementById('opt_deadCode').checked,
         deadCodeInjectionThreshold: 0.4,
-        debugProtection: document.getElementById('opt_debugProtection').checked,
-        debugProtectionInterval: document.getElementById('opt_debugProtection').checked ? 2000 : 0,
-        disableConsoleOutput: document.getElementById('opt_disableConsole').checked,
-        unicodeEscapeSequence: document.getElementById('opt_unicode').checked,
-        numbersToExpressions: document.getElementById('opt_numbers').checked,
-        splitStrings: document.getElementById('opt_splitStrings').checked,
-        splitStringsChunkLength: 5,
+        debugProtection:            document.getElementById('opt_debugProtection').checked,
+        debugProtectionInterval:    document.getElementById('opt_debugProtection').checked ? 2000 : 0,
+        disableConsoleOutput:       document.getElementById('opt_disableConsole').checked,
+        unicodeEscapeSequence:      document.getElementById('opt_unicode').checked,
+        numbersToExpressions:       document.getElementById('opt_numbers').checked,
+        splitStrings:               document.getElementById('opt_splitStrings').checked,
+        splitStringsChunkLength:    5,
         target: 'browser'
-      });
+      };
+
+      const result = JavaScriptObfuscator.obfuscate(code, opts);
       document.getElementById('outputCode').value = result.getObfuscatedCode();
       updateStats();
       setLoading(false);
@@ -726,8 +521,9 @@ function obfuscate() {
     } catch (e) {
       setLoading(false);
       toast('Lỗi: ' + e.message, 'err');
+      console.error('[JSCipher]', e);
     }
-  }, 200);
+  }, 50);
 }
 
 function setLoading(on) {
@@ -736,6 +532,7 @@ function setLoading(on) {
   document.getElementById('encryptBtn').disabled = on;
 }
 
+// ── File helpers ──────────────────────────────────────────────────────────
 function loadFile(e) {
   const file = e.target.files[0]; if (!file) return;
   const r = new FileReader();
@@ -779,6 +576,7 @@ function loadFromObfuscator() {
   toast('✓ Đã tải!', 'ok');
 }
 
+// ── GitHub API ────────────────────────────────────────────────────────────
 function ghHeaders(token) {
   return {
     'Authorization': 'Bearer ' + token,
@@ -835,11 +633,10 @@ async function uploadToGitHub() {
   document.getElementById('uploadSpinner').classList.add('show');
   document.getElementById('uploadBtnText').textContent = 'Đang upload...';
   document.getElementById('uploadBtn').disabled = true;
-
   clearLog();
   addLog('Bắt đầu upload...', 'info');
-  const encoded = btoa(unescape(encodeURIComponent(content)));
 
+  const encoded = btoa(unescape(encodeURIComponent(content)));
   let sha = null;
   try {
     const check = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${path}?ref=${branch}`, { headers: ghHeaders(token) });
@@ -871,6 +668,7 @@ async function uploadToGitHub() {
   document.getElementById('uploadBtn').disabled = false;
 }
 
+// ── Toast ─────────────────────────────────────────────────────────────────
 let toastTimer;
 function toast(msg, type = '') {
   const el = document.getElementById('toast');
