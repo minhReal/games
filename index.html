@@ -5,209 +5,178 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>JSCipher</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-<!-- FIX: dùng jsdelivr thay cdnjs, đúng path dist/index.browser.js -->
 <script src="https://cdn.jsdelivr.net/npm/javascript-obfuscator@4.0.0/dist/index.browser.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/lucide@0.395.0/dist/umd/lucide.min.js"></script>
 <style>
-* { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-
+* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
 :root {
-  --bg: #0f1117;
-  --surface: #1a1d27;
-  --border: #2a2d3d;
-  --accent: #6c63ff;
-  --accent-dim: rgba(108,99,255,0.15);
-  --green: #22c55e;
-  --red: #ef4444;
-  --yellow: #f59e0b;
-  --text: #e2e4f0;
-  --muted: #6b7280;
-  --mono: 'JetBrains Mono', monospace;
-  --sans: 'Inter', sans-serif;
+  --bg:#0f1117; --surface:#1a1d27; --border:#2a2d3d;
+  --accent:#6c63ff; --accent-dim:rgba(108,99,255,0.15);
+  --green:#22c55e; --red:#ef4444; --yellow:#f59e0b; --orange:#f97316;
+  --text:#e2e4f0; --muted:#6b7280;
+  --mono:'JetBrains Mono',monospace; --sans:'Inter',sans-serif;
 }
+html,body { height:100%; }
+body { font-family:var(--sans); background:var(--bg); color:var(--text); font-size:15px; line-height:1.5; }
+.app { display:flex; flex-direction:column; min-height:100vh; }
 
-html, body { height: 100%; }
-body { font-family: var(--sans); background: var(--bg); color: var(--text); font-size: 15px; line-height: 1.5; }
-.app { display: flex; flex-direction: column; min-height: 100vh; }
+/* Lucide icon helper */
+.icon { display:inline-flex; align-items:center; justify-content:center; flex-shrink:0; }
+.icon svg { width:15px; height:15px; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; fill:none; }
+.icon-sm svg { width:13px; height:13px; }
+.icon-lg svg { width:18px; height:18px; }
 
-.header {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 14px 16px; border-bottom: 1px solid var(--border);
-  background: var(--surface); position: sticky; top: 0; z-index: 50;
-}
-.brand { display: flex; align-items: center; gap: 10px; }
-.brand-icon {
-  width: 32px; height: 32px; background: var(--accent); border-radius: 8px;
-  display: flex; align-items: center; justify-content: center;
-  font-family: var(--mono); font-weight: 500; font-size: 13px; color: white;
-}
-.brand-name { font-size: 16px; font-weight: 600; letter-spacing: -0.3px; }
-.brand-sub { font-size: 11px; color: var(--muted); margin-top: 1px; }
+/* Header */
+.header { display:flex; align-items:center; justify-content:space-between; padding:14px 16px; border-bottom:1px solid var(--border); background:var(--surface); position:sticky; top:0; z-index:50; }
+.brand { display:flex; align-items:center; gap:10px; }
+.brand-icon { width:32px; height:32px; background:var(--accent); border-radius:8px; display:flex; align-items:center; justify-content:center; font-family:var(--mono); font-size:13px; color:white; font-weight:500; }
+.brand-name { font-size:16px; font-weight:600; letter-spacing:-0.3px; }
+.brand-sub { font-size:11px; color:var(--muted); margin-top:1px; }
+.lib-status { display:flex; align-items:center; gap:6px; font-size:11px; color:var(--muted); }
+.lib-dot { width:7px; height:7px; border-radius:50%; background:var(--yellow); flex-shrink:0; }
+.lib-dot.ok { background:var(--green); }
+.lib-dot.err { background:var(--red); }
 
-/* lib status badge */
-.lib-status {
-  display: flex; align-items: center; gap: 6px;
-  font-size: 11px; font-family: var(--mono);
-}
-.lib-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--yellow); }
-.lib-dot.ok { background: var(--green); }
-.lib-dot.err { background: var(--red); }
+/* Tabs */
+.tabs { display:flex; background:var(--surface); border-bottom:1px solid var(--border); padding:0 16px; overflow-x:auto; scrollbar-width:none; }
+.tabs::-webkit-scrollbar { display:none; }
+.tab { display:flex; align-items:center; gap:7px; padding:12px 16px; font-size:13px; font-weight:500; color:var(--muted); cursor:pointer; border:none; background:none; white-space:nowrap; border-bottom:2px solid transparent; transition:all 0.15s; font-family:var(--sans); }
+.tab svg { width:14px; height:14px; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; fill:none; }
+.tab.active { color:var(--accent); border-bottom-color:var(--accent); }
+.tab:hover:not(.active) { color:var(--text); }
 
-.tabs {
-  display: flex; background: var(--surface);
-  border-bottom: 1px solid var(--border); padding: 0 16px;
-  overflow-x: auto; scrollbar-width: none;
-}
-.tabs::-webkit-scrollbar { display: none; }
+/* Content */
+.content { flex:1; padding:16px; max-width:800px; margin:0 auto; width:100%; }
+.page { display:none; flex-direction:column; gap:12px; }
+.page.active { display:flex; }
 
-.tab {
-  padding: 12px 16px; font-size: 13px; font-weight: 500; color: var(--muted);
-  cursor: pointer; border: none; background: none; white-space: nowrap;
-  border-bottom: 2px solid transparent; transition: all 0.15s; font-family: var(--sans);
-}
-.tab.active { color: var(--accent); border-bottom-color: var(--accent); }
-.tab:hover:not(.active) { color: var(--text); }
+/* Card */
+.card { background:var(--surface); border:1px solid var(--border); border-radius:12px; overflow:hidden; }
+.card-header { display:flex; align-items:center; justify-content:space-between; padding:12px 14px; border-bottom:1px solid var(--border); }
+.card-title { font-size:12px; font-weight:600; letter-spacing:0.5px; text-transform:uppercase; color:var(--muted); }
+.card-actions { display:flex; gap:6px; }
 
-.content { flex: 1; padding: 16px; max-width: 800px; margin: 0 auto; width: 100%; }
+/* Textarea */
+textarea { width:100%; background:transparent; border:none; color:var(--text); font-family:var(--mono); font-size:13px; line-height:1.6; padding:14px; resize:none; outline:none; min-height:180px; }
+textarea::placeholder { color:var(--muted); }
+#outputCode { color:#7dd3fc; min-height:160px; }
 
-.page { display: none; flex-direction: column; gap: 12px; }
-.page.active { display: flex; }
+/* Buttons */
+.btn { display:inline-flex; align-items:center; gap:6px; padding:7px 12px; font-size:12px; font-weight:500; font-family:var(--sans); border-radius:7px; border:1px solid var(--border); background:transparent; color:var(--muted); cursor:pointer; transition:all 0.15s; white-space:nowrap; }
+.btn svg { width:13px; height:13px; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; fill:none; flex-shrink:0; }
+.btn:hover { color:var(--text); border-color:#444; }
+.btn:active { transform:scale(0.97); }
+.btn-icon { padding:7px 9px; }
+.btn-primary { background:var(--accent); border-color:var(--accent); color:white; font-size:14px; padding:13px 20px; width:100%; justify-content:center; border-radius:10px; font-weight:600; }
+.btn-primary svg { width:16px; height:16px; }
+.btn-primary:hover { background:#7c75ff; border-color:#7c75ff; color:white; }
+.btn-primary:disabled { opacity:0.5; cursor:not-allowed; }
 
-.card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+/* Stats */
+.stats { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
+.stat { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:12px; text-align:center; }
+.stat-val { font-family:var(--mono); font-size:17px; font-weight:500; color:var(--accent); }
+.stat-label { font-size:11px; color:var(--muted); margin-top:2px; }
 
-.card-header {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 12px 14px; border-bottom: 1px solid var(--border);
-}
-.card-title { font-size: 12px; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase; color: var(--muted); }
-.card-actions { display: flex; gap: 6px; }
+/* Presets */
+.presets { display:flex; gap:6px; flex-wrap:wrap; padding:12px 14px; border-bottom:1px solid var(--border); }
+.pill { padding:5px 13px; font-size:12px; font-weight:500; border-radius:20px; border:1px solid var(--border); background:transparent; color:var(--muted); cursor:pointer; transition:all 0.15s; font-family:var(--sans); }
+.pill.active,.pill:hover { background:var(--accent-dim); border-color:var(--accent); color:var(--accent); }
 
-textarea {
-  width: 100%; background: transparent; border: none; color: var(--text);
-  font-family: var(--mono); font-size: 13px; line-height: 1.6;
-  padding: 14px; resize: none; outline: none; min-height: 180px;
-}
-textarea::placeholder { color: var(--muted); }
-#outputCode { color: #7dd3fc; min-height: 160px; }
+/* Section label */
+.section-label { display:flex; align-items:center; gap:8px; font-size:11px; font-weight:600; letter-spacing:0.5px; text-transform:uppercase; color:var(--muted); padding:12px 14px 6px; }
 
-.btn {
-  display: inline-flex; align-items: center; gap: 6px; padding: 7px 12px;
-  font-size: 12px; font-weight: 500; font-family: var(--sans);
-  border-radius: 7px; border: 1px solid var(--border); background: transparent;
-  color: var(--muted); cursor: pointer; transition: all 0.15s; white-space: nowrap;
-}
-.btn:hover { color: var(--text); border-color: #444; }
-.btn:active { transform: scale(0.97); }
+/* Tag */
+.tag { display:inline-flex; align-items:center; gap:3px; padding:2px 6px; border-radius:4px; font-size:10px; font-weight:600; }
+.tag svg { width:10px; height:10px; stroke:currentColor; stroke-width:2.5; stroke-linecap:round; stroke-linejoin:round; fill:none; }
+.tag-slow { background:rgba(249,115,22,0.12); color:var(--orange); border:1px solid rgba(249,115,22,0.25); }
+.tag-safe { background:rgba(34,197,94,0.1); color:var(--green); border:1px solid rgba(34,197,94,0.2); }
 
-.btn-primary {
-  background: var(--accent); border-color: var(--accent); color: white;
-  font-size: 14px; padding: 13px 20px; width: 100%; justify-content: center;
-  border-radius: 10px; font-weight: 600;
-}
-.btn-primary:hover { background: #7c75ff; border-color: #7c75ff; color: white; }
-.btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+/* Opt row */
+.opt { display:flex; align-items:center; justify-content:space-between; padding:10px 14px; gap:12px; }
+.opt+.opt { border-top:1px solid var(--border); }
+.opt-info { flex:1; min-width:0; }
+.opt-name { font-size:13px; font-weight:500; display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
+.opt-desc { font-size:11px; color:var(--muted); margin-top:2px; }
 
-.stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
-.stat { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 12px; text-align: center; }
-.stat-val { font-family: var(--mono); font-size: 18px; font-weight: 500; color: var(--accent); }
-.stat-label { font-size: 11px; color: var(--muted); margin-top: 2px; }
+/* Toggle */
+.toggle { position:relative; width:40px; height:22px; flex-shrink:0; cursor:pointer; }
+.toggle input { opacity:0; width:0; height:0; position:absolute; }
+.toggle-track { position:absolute; inset:0; background:var(--border); border-radius:22px; transition:background 0.2s; }
+.toggle-thumb { position:absolute; width:16px; height:16px; background:#666; border-radius:50%; top:3px; left:3px; transition:all 0.2s; pointer-events:none; }
+.toggle input:checked ~ .toggle-track { background:var(--accent); }
+.toggle input:checked ~ .toggle-thumb { left:21px; background:white; }
 
-.presets { display: flex; gap: 6px; flex-wrap: wrap; padding: 12px 14px; border-bottom: 1px solid var(--border); }
-.pill {
-  padding: 5px 13px; font-size: 12px; font-weight: 500; border-radius: 20px;
-  border: 1px solid var(--border); background: transparent; color: var(--muted);
-  cursor: pointer; transition: all 0.15s; font-family: var(--sans);
-}
-.pill.active, .pill:hover { background: var(--accent-dim); border-color: var(--accent); color: var(--accent); }
+/* Select */
+.opt-select { background:var(--bg); border:1px solid var(--border); color:var(--text); padding:5px 8px; font-size:12px; font-family:var(--mono); border-radius:7px; outline:none; cursor:pointer; }
+.opt-select:focus { border-color:var(--accent); }
 
-.section-label { font-size: 11px; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase; color: var(--muted); padding: 12px 14px 6px; }
+/* Slider */
+.slider-row { padding:10px 14px; border-top:1px solid var(--border); }
+.slider-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:4px; }
+.slider-name { font-size:13px; font-weight:500; }
+.slider-val { font-family:var(--mono); font-size:12px; color:var(--accent); }
+.slider-desc { font-size:11px; color:var(--muted); margin-bottom:8px; }
+input[type=range] { width:100%; height:4px; border-radius:4px; outline:none; border:none; background:var(--border); cursor:pointer; -webkit-appearance:none; appearance:none; }
+input[type=range]::-webkit-slider-thumb { -webkit-appearance:none; width:16px; height:16px; border-radius:50%; background:var(--accent); cursor:pointer; box-shadow:0 0 0 3px var(--accent-dim); }
+input[type=range]::-moz-range-thumb { width:16px; height:16px; border-radius:50%; background:var(--accent); border:none; cursor:pointer; }
 
-.opt { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; gap: 12px; }
-.opt + .opt { border-top: 1px solid var(--border); }
-.opt-info { flex: 1; min-width: 0; }
-.opt-name { font-size: 13px; font-weight: 500; }
-.opt-desc { font-size: 11px; color: var(--muted); margin-top: 2px; }
-
-.toggle { position: relative; width: 40px; height: 22px; flex-shrink: 0; cursor: pointer; }
-.toggle input { opacity: 0; width: 0; height: 0; position: absolute; }
-.toggle-track { position: absolute; inset: 0; background: var(--border); border-radius: 22px; transition: background 0.2s; }
-.toggle-thumb { position: absolute; width: 16px; height: 16px; background: #666; border-radius: 50%; top: 3px; left: 3px; transition: all 0.2s; pointer-events: none; }
-.toggle input:checked ~ .toggle-track { background: var(--accent); }
-.toggle input:checked ~ .toggle-thumb { left: 21px; background: white; }
-
-.opt-select {
-  background: var(--bg); border: 1px solid var(--border); color: var(--text);
-  padding: 5px 8px; font-size: 12px; font-family: var(--mono);
-  border-radius: 7px; outline: none; cursor: pointer;
-}
-.opt-select:focus { border-color: var(--accent); }
-
-.fields { display: flex; flex-direction: column; gap: 10px; padding: 14px; }
-.field label { display: block; font-size: 12px; font-weight: 500; color: var(--muted); margin-bottom: 5px; }
-.field input {
-  width: 100%; background: var(--bg); border: 1px solid var(--border); color: var(--text);
-  padding: 10px 12px; font-family: var(--mono); font-size: 13px;
-  border-radius: 8px; outline: none; transition: border-color 0.15s; -webkit-appearance: none;
-}
-.field input:focus { border-color: var(--accent); }
-.field input::placeholder { color: var(--muted); }
-
-.log { font-family: var(--mono); font-size: 12px; line-height: 1.8; padding: 12px 14px; min-height: 80px; color: var(--muted); }
-.log-ok   { color: var(--green); }
-.log-err  { color: var(--red); }
-.log-info { color: var(--accent); }
-.log-warn { color: var(--yellow); }
-
-.spinner {
-  display: none; width: 15px; height: 15px;
-  border: 2px solid rgba(255,255,255,0.3); border-top-color: white;
-  border-radius: 50%; animation: spin 0.7s linear infinite;
-}
-.spinner.show { display: inline-block; }
-@keyframes spin { to { transform: rotate(360deg); } }
-
-.toast {
-  position: fixed; bottom: 20px; left: 50%;
-  transform: translateX(-50%) translateY(80px);
-  background: var(--surface); border: 1px solid var(--border); color: var(--text);
-  padding: 10px 18px; border-radius: 10px; font-size: 13px; font-weight: 500;
-  white-space: nowrap; box-shadow: 0 8px 32px rgba(0,0,0,0.5);
-  transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1), opacity 0.3s;
-  opacity: 0; z-index: 999; max-width: calc(100vw - 32px); overflow: hidden; text-overflow: ellipsis;
-}
-.toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
-.toast.ok   { border-color: var(--green);  color: var(--green); }
-.toast.err  { border-color: var(--red);    color: var(--red); }
-.toast.info { border-color: var(--accent); color: var(--accent); }
-
-.info-box { background: rgba(108,99,255,0.08); border: 1px solid rgba(108,99,255,0.2); border-radius: 10px; padding: 12px 14px; font-size: 13px; color: var(--muted); line-height: 1.6; }
-.info-box a { color: var(--accent); text-decoration: none; }
-
-.file-btn {
-  display: inline-flex; align-items: center; gap: 6px; padding: 7px 12px;
-  font-size: 12px; font-weight: 500; font-family: var(--sans);
-  border-radius: 7px; border: 1px solid var(--border); background: transparent;
-  color: var(--muted); cursor: pointer; transition: all 0.15s;
-}
-.file-btn:hover { color: var(--text); border-color: #444; }
+/* Perf warning */
+.perf-warn { display:none; background:rgba(249,115,22,0.07); border:1px solid rgba(249,115,22,0.3); border-radius:10px; padding:11px 14px; font-size:12px; color:var(--orange); line-height:1.6; align-items:flex-start; gap:9px; }
+.perf-warn.show { display:flex; }
+.perf-warn svg { width:15px; height:15px; stroke:var(--orange); stroke-width:2; stroke-linecap:round; stroke-linejoin:round; fill:none; flex-shrink:0; margin-top:1px; }
 
 /* Error banner */
-.err-banner {
-  display: none; background: rgba(239,68,68,0.1); border: 1px solid var(--red);
-  border-radius: 10px; padding: 12px 14px; font-size: 13px; color: var(--red); line-height: 1.6;
-}
-.err-banner.show { display: block; }
+.err-banner { display:none; background:rgba(239,68,68,0.08); border:1px solid var(--red); border-radius:10px; padding:12px 14px; font-size:13px; color:var(--red); line-height:1.6; }
+.err-banner.show { display:block; }
 
-@media (max-width: 480px) {
-  .content { padding: 12px; }
-  textarea { font-size: 12px; }
-  .stat-val { font-size: 16px; }
-  .brand-sub { display: none; }
+/* Fields */
+.fields { display:flex; flex-direction:column; gap:10px; padding:14px; }
+.field label { display:block; font-size:12px; font-weight:500; color:var(--muted); margin-bottom:5px; }
+.field input { width:100%; background:var(--bg); border:1px solid var(--border); color:var(--text); padding:10px 12px; font-family:var(--mono); font-size:13px; border-radius:8px; outline:none; transition:border-color 0.15s; -webkit-appearance:none; }
+.field input:focus { border-color:var(--accent); }
+.field input::placeholder { color:var(--muted); }
+
+/* Log */
+.log { font-family:var(--mono); font-size:12px; line-height:1.8; padding:12px 14px; min-height:80px; color:var(--muted); }
+.log-ok { color:var(--green); }
+.log-err { color:var(--red); }
+.log-info { color:var(--accent); }
+.log-warn { color:var(--yellow); }
+
+/* Spinner */
+.spinner { display:none; width:15px; height:15px; border:2px solid rgba(255,255,255,0.25); border-top-color:white; border-radius:50%; animation:spin 0.7s linear infinite; flex-shrink:0; }
+.spinner.show { display:inline-block; }
+@keyframes spin { to { transform:rotate(360deg); } }
+
+/* Toast */
+.toast { position:fixed; bottom:20px; left:50%; transform:translateX(-50%) translateY(80px); background:var(--surface); border:1px solid var(--border); color:var(--text); padding:10px 18px; border-radius:10px; font-size:13px; font-weight:500; display:flex; align-items:center; gap:8px; white-space:nowrap; box-shadow:0 8px 32px rgba(0,0,0,0.5); transition:transform 0.3s cubic-bezier(0.34,1.56,0.64,1),opacity 0.3s; opacity:0; z-index:999; max-width:calc(100vw - 32px); overflow:hidden; text-overflow:ellipsis; }
+.toast svg { width:14px; height:14px; stroke:currentColor; stroke-width:2.5; stroke-linecap:round; stroke-linejoin:round; fill:none; flex-shrink:0; }
+.toast.show { transform:translateX(-50%) translateY(0); opacity:1; }
+.toast.ok  { border-color:var(--green);  color:var(--green); }
+.toast.err { border-color:var(--red);    color:var(--red); }
+.toast.info{ border-color:var(--accent); color:var(--accent); }
+
+.info-box { background:rgba(108,99,255,0.08); border:1px solid rgba(108,99,255,0.2); border-radius:10px; padding:12px 14px; font-size:13px; color:var(--muted); line-height:1.6; display:flex; gap:10px; align-items:flex-start; }
+.info-box svg { width:15px; height:15px; stroke:var(--accent); stroke-width:2; stroke-linecap:round; stroke-linejoin:round; fill:none; flex-shrink:0; margin-top:2px; }
+.info-box a { color:var(--accent); text-decoration:none; }
+
+.file-btn { display:inline-flex; align-items:center; gap:6px; padding:7px 12px; font-size:12px; font-weight:500; font-family:var(--sans); border-radius:7px; border:1px solid var(--border); background:transparent; color:var(--muted); cursor:pointer; transition:all 0.15s; }
+.file-btn svg { width:13px; height:13px; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; fill:none; }
+.file-btn:hover { color:var(--text); border-color:#444; }
+
+@media(max-width:480px){
+  .content { padding:12px; }
+  textarea { font-size:12px; }
+  .stat-val { font-size:15px; }
+  .brand-sub { display:none; }
 }
 </style>
 </head>
 <body>
 <div class="app">
 
+  <!-- Header -->
   <div class="header">
     <div class="brand">
       <div class="brand-icon">JS</div>
@@ -218,26 +187,36 @@ textarea::placeholder { color: var(--muted); }
     </div>
     <div class="lib-status">
       <div class="lib-dot" id="libDot"></div>
-      <span id="libLabel" style="color:var(--muted)">Loading...</span>
+      <span id="libLabel">Loading...</span>
     </div>
   </div>
 
+  <!-- Tabs -->
   <div class="tabs">
-    <button class="tab active" onclick="switchTab('obfuscate',this)">⚡ Mã Hoá</button>
-    <button class="tab" onclick="switchTab('options',this)">⚙ Tuỳ Chọn</button>
-    <button class="tab" onclick="switchTab('github',this)">🐙 GitHub</button>
+    <button class="tab active" onclick="switchTab('obfuscate',this)">
+      <svg viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+      Mã Hoá
+    </button>
+    <button class="tab" onclick="switchTab('options',this)">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07M8.46 8.46a5 5 0 0 0 0 7.07"/></svg>
+      Tuỳ Chọn
+    </button>
+    <button class="tab" onclick="switchTab('github',this)">
+      <svg viewBox="0 0 24 24"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>
+      GitHub
+    </button>
   </div>
 
   <div class="content">
 
-    <!-- LIB ERROR BANNER -->
     <div class="err-banner" id="errBanner">
-      ⚠️ Không tải được thư viện mã hoá. Kiểm tra kết nối mạng rồi tải lại trang.<br>
-      <small style="opacity:0.7">Lỗi: <span id="errMsg"></span></small>
+      Không tải được thư viện mã hoá. Kiểm tra kết nối mạng rồi tải lại trang.<br>
+      <small style="opacity:0.7"><span id="errMsg"></span></small>
     </div>
 
     <!-- PAGE: MÃ HOÁ -->
     <div id="page-obfuscate" class="page active">
+
       <div class="stats">
         <div class="stat"><div class="stat-val" id="inputSize">0B</div><div class="stat-label">Input</div></div>
         <div class="stat"><div class="stat-val" id="outputSize">0B</div><div class="stat-label">Output</div></div>
@@ -248,33 +227,57 @@ textarea::placeholder { color: var(--muted); }
         <div class="card-header">
           <span class="card-title">Code gốc</span>
           <div class="card-actions">
-            <label class="file-btn">📁 Upload<input type="file" accept=".js,.ts,.txt" style="display:none" onchange="loadFile(event)"></label>
-            <button class="btn" onclick="clearAll()">Xoá</button>
+            <label class="file-btn">
+              <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+              Upload
+              <input type="file" accept=".js,.ts,.txt" style="display:none" onchange="loadFile(event)">
+            </label>
+            <button class="btn" onclick="clearAll()">
+              <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+              Xoá
+            </button>
           </div>
         </div>
         <textarea id="inputCode" placeholder="// Dán JavaScript vào đây..." oninput="updateStats()" spellcheck="false" autocorrect="off" autocapitalize="off"></textarea>
       </div>
 
+      <!-- Perf warning -->
+      <div class="perf-warn" id="perfWarn">
+        <svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        <span id="perfWarnText"></span>
+      </div>
+
       <button class="btn btn-primary" onclick="obfuscate()" id="encryptBtn">
         <div class="spinner" id="spinner"></div>
-        <span id="btnText">⚡ Mã Hoá JavaScript</span>
+        <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        <span id="btnText">Mã Hoá JavaScript</span>
       </button>
 
       <div class="card">
         <div class="card-header">
           <span class="card-title">Kết quả</span>
           <div class="card-actions">
-            <button class="btn" onclick="copyOutput()">Copy</button>
-            <button class="btn" onclick="downloadOutput()">💾</button>
-            <button class="btn" onclick="sendToGitHub()">🐙</button>
+            <button class="btn" onclick="copyOutput()">
+              <svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+              Copy
+            </button>
+            <button class="btn" onclick="downloadOutput()">
+              <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              Tải
+            </button>
+            <button class="btn btn-icon" onclick="sendToGitHub()" title="Gửi lên GitHub">
+              <svg viewBox="0 0 24 24"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>
+            </button>
           </div>
         </div>
         <textarea id="outputCode" readonly placeholder="// Kết quả hiện ở đây..." spellcheck="false"></textarea>
       </div>
+
     </div>
 
     <!-- PAGE: TUỲ CHỌN -->
     <div id="page-options" class="page">
+
       <div class="card">
         <div class="card-header"><span class="card-title">Preset nhanh</span></div>
         <div class="presets">
@@ -285,8 +288,15 @@ textarea::placeholder { color: var(--muted); }
         </div>
       </div>
 
+      <!-- Safe options -->
       <div class="card">
-        <div class="section-label">Làm rối mã nguồn</div>
+        <div class="section-label">
+          Làm rối mã nguồn
+          <span class="tag tag-safe">
+            <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+            Không lag
+          </span>
+        </div>
         <div class="opt">
           <div class="opt-info"><div class="opt-name">Compact</div><div class="opt-desc">Nén thành một dòng</div></div>
           <label class="toggle"><input type="checkbox" id="opt_compact" checked><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
@@ -315,34 +325,6 @@ textarea::placeholder { color: var(--muted); }
           <div class="opt-info"><div class="opt-name">Xáo trộn chuỗi</div></div>
           <label class="toggle"><input type="checkbox" id="opt_shuffleStringArray" checked><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
         </div>
-      </div>
-
-      <div class="card">
-        <div class="section-label">Bảo vệ</div>
-        <div class="opt">
-          <div class="opt-info"><div class="opt-name">Control Flow Flatten</div><div class="opt-desc">Làm phức tạp luồng thực thi</div></div>
-          <label class="toggle"><input type="checkbox" id="opt_controlFlow"><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
-        </div>
-        <div class="opt">
-          <div class="opt-info"><div class="opt-name">Dead Code Injection</div><div class="opt-desc">Thêm code giả vào</div></div>
-          <label class="toggle"><input type="checkbox" id="opt_deadCode"><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
-        </div>
-        <div class="opt">
-          <div class="opt-info"><div class="opt-name">Self Defending</div><div class="opt-desc">Chống format lại code</div></div>
-          <label class="toggle"><input type="checkbox" id="opt_selfDefending"><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
-        </div>
-        <div class="opt">
-          <div class="opt-info"><div class="opt-name">Debug Protection</div><div class="opt-desc">Chặn DevTools</div></div>
-          <label class="toggle"><input type="checkbox" id="opt_debugProtection"><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
-        </div>
-        <div class="opt">
-          <div class="opt-info"><div class="opt-name">Tắt Console</div><div class="opt-desc">Chặn console.log</div></div>
-          <label class="toggle"><input type="checkbox" id="opt_disableConsole"><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
-        </div>
-      </div>
-
-      <div class="card">
-        <div class="section-label">Biến đổi thêm</div>
         <div class="opt">
           <div class="opt-info"><div class="opt-name">Unicode Escape</div><div class="opt-desc">String → \uXXXX</div></div>
           <label class="toggle"><input type="checkbox" id="opt_unicode"><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
@@ -351,21 +333,114 @@ textarea::placeholder { color: var(--muted); }
           <div class="opt-info"><div class="opt-name">Tách chuỗi</div><div class="opt-desc">Chia nhỏ string literals</div></div>
           <label class="toggle"><input type="checkbox" id="opt_splitStrings"><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
         </div>
+      </div>
+
+      <!-- Heavy options -->
+      <div class="card">
+        <div class="section-label">
+          Bảo vệ nâng cao
+          <span class="tag tag-slow">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            Ảnh hưởng tốc độ
+          </span>
+        </div>
+
+        <!-- Control Flow -->
         <div class="opt">
+          <div class="opt-info">
+            <div class="opt-name">
+              Control Flow Flatten
+              <span class="tag tag-slow">
+                <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                Chậm
+              </span>
+            </div>
+            <div class="opt-desc">Làm phức tạp luồng thực thi</div>
+          </div>
+          <label class="toggle"><input type="checkbox" id="opt_controlFlow" onchange="onCfChange()"><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
+        </div>
+        <div class="slider-row" id="cfSliderRow" style="display:none">
+          <div class="slider-header"><span class="slider-name">Threshold</span><span class="slider-val" id="cfVal">0.3</span></div>
+          <div class="slider-desc">Khuyến nghị ≤ 0.4 để tránh lag</div>
+          <input type="range" id="opt_cfThreshold" min="0.1" max="1" step="0.1" value="0.3"
+            oninput="document.getElementById('cfVal').textContent=parseFloat(this.value).toFixed(1);updatePerfWarn()">
+        </div>
+
+        <!-- Dead Code -->
+        <div class="opt" style="border-top:1px solid var(--border)">
+          <div class="opt-info">
+            <div class="opt-name">
+              Dead Code Injection
+              <span class="tag tag-slow">
+                <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                Chậm
+              </span>
+            </div>
+            <div class="opt-desc">Chèn code giả, tăng kích thước file</div>
+          </div>
+          <label class="toggle"><input type="checkbox" id="opt_deadCode" onchange="onDcChange()"><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
+        </div>
+        <div class="slider-row" id="dcSliderRow" style="display:none">
+          <div class="slider-header"><span class="slider-name">Threshold</span><span class="slider-val" id="dcVal">0.2</span></div>
+          <div class="slider-desc">Khuyến nghị ≤ 0.3</div>
+          <input type="range" id="opt_dcThreshold" min="0.1" max="1" step="0.1" value="0.2"
+            oninput="document.getElementById('dcVal').textContent=parseFloat(this.value).toFixed(1);updatePerfWarn()">
+        </div>
+
+        <!-- Self Defending -->
+        <div class="opt" style="border-top:1px solid var(--border)">
+          <div class="opt-info"><div class="opt-name">Self Defending</div><div class="opt-desc">Chống format lại code</div></div>
+          <label class="toggle"><input type="checkbox" id="opt_selfDefending"><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
+        </div>
+
+        <!-- Debug Protection -->
+        <div class="opt" style="border-top:1px solid var(--border)">
+          <div class="opt-info">
+            <div class="opt-name">
+              Debug Protection
+              <span class="tag tag-slow">
+                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                Interval
+              </span>
+            </div>
+            <div class="opt-desc">Chặn DevTools</div>
+          </div>
+          <label class="toggle"><input type="checkbox" id="opt_debugProtection" onchange="onDbgChange()"><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
+        </div>
+        <div class="slider-row" id="dbgIntervalRow" style="display:none">
+          <div class="slider-header"><span class="slider-name">Interval</span><span class="slider-val" id="dbgVal">0 ms</span></div>
+          <div class="slider-desc">0 = chỉ chạy 1 lần khi load, &gt; 0 = chạy lặp (lag)</div>
+          <input type="range" id="opt_dbgInterval" min="0" max="4000" step="500" value="0"
+            oninput="document.getElementById('dbgVal').textContent=this.value+' ms';updatePerfWarn()">
+        </div>
+
+        <!-- Disable Console -->
+        <div class="opt" style="border-top:1px solid var(--border)">
+          <div class="opt-info"><div class="opt-name">Tắt Console</div><div class="opt-desc">Chặn console.log</div></div>
+          <label class="toggle"><input type="checkbox" id="opt_disableConsole"><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
+        </div>
+
+        <!-- Numbers -->
+        <div class="opt" style="border-top:1px solid var(--border)">
           <div class="opt-info"><div class="opt-name">Số → Biểu thức</div><div class="opt-desc">Chuyển số thành phép tính</div></div>
           <label class="toggle"><input type="checkbox" id="opt_numbers"><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
         </div>
       </div>
+
     </div>
 
     <!-- PAGE: GITHUB -->
     <div id="page-github" class="page">
+
       <div class="card">
         <div class="card-header">
           <span class="card-title">Nội dung file</span>
-          <button class="btn" onclick="loadFromObfuscator()">← Lấy từ Mã Hoá</button>
+          <button class="btn" onclick="loadFromObfuscator()">
+            <svg viewBox="0 0 24 24"><polyline points="15 14 20 9 15 4"/><path d="M4 20v-7a4 4 0 0 1 4-4h12"/></svg>
+            Lấy từ Mã Hoá
+          </button>
         </div>
-        <textarea id="ghContent" style="color:#7dd3fc; min-height:130px" placeholder="// Code cần upload..." spellcheck="false" autocapitalize="off"></textarea>
+        <textarea id="ghContent" style="color:#7dd3fc;min-height:130px" placeholder="// Code cần upload..." spellcheck="false" autocapitalize="off"></textarea>
       </div>
 
       <div class="card">
@@ -379,48 +454,57 @@ textarea::placeholder { color: var(--muted); }
           <div class="field"><label>Commit message</label><input type="text" id="ghMessage" value="feat: add obfuscated JS via JSCipher"></div>
           <button class="btn btn-primary" onclick="uploadToGitHub()" id="uploadBtn">
             <div class="spinner" id="uploadSpinner"></div>
-            <span id="uploadBtnText">🐙 Upload lên GitHub</span>
+            <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            <span id="uploadBtnText">Upload lên GitHub</span>
           </button>
-          <button class="btn" style="justify-content:center;padding:10px" onclick="checkRepo()">Kiểm tra kết nối</button>
+          <button class="btn" style="justify-content:center;padding:10px" onclick="checkRepo()">
+            <svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+            Kiểm tra kết nối
+          </button>
         </div>
       </div>
 
       <div class="info-box">
-        🔒 Token không được lưu. Tạo token với scope <strong>repo</strong> tại
-        <a href="https://github.com/settings/tokens" target="_blank">github.com/settings/tokens</a>
+        <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        <span>
+          Token không được lưu trên server. Tạo token với scope <strong>repo</strong> tại
+          <a href="https://github.com/settings/tokens" target="_blank">github.com/settings/tokens</a>
+        </span>
       </div>
 
       <div class="card">
         <div class="card-header">
           <span class="card-title">Nhật ký</span>
-          <button class="btn" onclick="clearLog()">Xoá</button>
+          <button class="btn" onclick="clearLog()">
+            <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+            Xoá
+          </button>
         </div>
         <div class="log" id="statusLog">Sẵn sàng...</div>
       </div>
+
     </div>
 
   </div>
 </div>
 
-<div class="toast" id="toast"></div>
+<!-- Toast -->
+<div class="toast" id="toast">
+  <svg id="toastIcon" viewBox="0 0 24 24"></svg>
+  <span id="toastMsg"></span>
+</div>
 
 <script>
-// ── Kiểm tra thư viện sau khi trang load ──────────────────────────────────
+// ── Lib check ─────────────────────────────────────────────────────────────
 window.addEventListener('load', () => {
-  const dot   = document.getElementById('libDot');
-  const label = document.getElementById('libLabel');
-  const banner = document.getElementById('errBanner');
-
+  const dot = document.getElementById('libDot');
+  const lbl = document.getElementById('libLabel');
   if (typeof JavaScriptObfuscator !== 'undefined') {
-    dot.classList.add('ok');
-    label.textContent = 'Sẵn sàng';
-    label.style.color = 'var(--green)';
+    dot.classList.add('ok'); lbl.textContent = 'Sẵn sàng'; lbl.style.color = 'var(--green)';
   } else {
-    dot.classList.add('err');
-    label.textContent = 'Lỗi thư viện';
-    label.style.color = 'var(--red)';
-    banner.classList.add('show');
-    document.getElementById('errMsg').textContent = 'JavaScriptObfuscator is not defined — tải lại trang hoặc kiểm tra mạng.';
+    dot.classList.add('err'); lbl.textContent = 'Lỗi thư viện'; lbl.style.color = 'var(--red)';
+    document.getElementById('errBanner').classList.add('show');
+    document.getElementById('errMsg').textContent = 'JavaScriptObfuscator is not defined — tải lại trang';
     document.getElementById('encryptBtn').disabled = true;
   }
 });
@@ -433,26 +517,59 @@ function switchTab(name, el) {
   document.getElementById('page-' + name).classList.add('active');
 }
 
+// ── Slider toggles ────────────────────────────────────────────────────────
+function onCfChange() {
+  const on = document.getElementById('opt_controlFlow').checked;
+  document.getElementById('cfSliderRow').style.display = on ? 'block' : 'none';
+  updatePerfWarn();
+}
+function onDcChange() {
+  const on = document.getElementById('opt_deadCode').checked;
+  document.getElementById('dcSliderRow').style.display = on ? 'block' : 'none';
+  updatePerfWarn();
+}
+function onDbgChange() {
+  const on = document.getElementById('opt_debugProtection').checked;
+  document.getElementById('dbgIntervalRow').style.display = on ? 'block' : 'none';
+  updatePerfWarn();
+}
+
+// ── Perf warning ──────────────────────────────────────────────────────────
+function updatePerfWarn() {
+  const cf  = document.getElementById('opt_controlFlow').checked;
+  const cfT = parseFloat(document.getElementById('opt_cfThreshold').value);
+  const dc  = document.getElementById('opt_deadCode').checked;
+  const dbg = document.getElementById('opt_debugProtection').checked;
+  const dbgInt = parseInt(document.getElementById('opt_dbgInterval').value);
+  const warns = [];
+  if (cf && cfT > 0.4) warns.push(`Control Flow threshold ${cfT.toFixed(1)} cao — giảm xuống ≤ 0.4`);
+  if (dc) warns.push('Dead Code Injection làm tăng kích thước file đáng kể');
+  if (dbg && dbgInt > 0) warns.push(`Debug Protection interval ${dbgInt}ms chạy nền liên tục`);
+  const el = document.getElementById('perfWarn');
+  if (warns.length) {
+    el.classList.add('show');
+    document.getElementById('perfWarnText').innerHTML = '<b>Cảnh báo hiệu năng:</b> ' + warns.join(' · ');
+  } else {
+    el.classList.remove('show');
+  }
+}
+
 // ── Stats ─────────────────────────────────────────────────────────────────
 function formatBytes(b) {
   if (!b) return '0B';
-  if (b < 1024) return b + 'B';
-  return (b / 1024).toFixed(1) + 'K';
+  return b < 1024 ? b + 'B' : (b/1024).toFixed(1) + 'K';
 }
-
 function updateStats() {
-  const i = document.getElementById('inputCode').value;
-  const o = document.getElementById('outputCode').value;
-  document.getElementById('inputSize').textContent  = formatBytes(new Blob([i]).size);
-  document.getElementById('outputSize').textContent = formatBytes(new Blob([o]).size);
+  document.getElementById('inputSize').textContent  = formatBytes(new Blob([document.getElementById('inputCode').value]).size);
+  document.getElementById('outputSize').textContent = formatBytes(new Blob([document.getElementById('outputCode').value]).size);
 }
 
 // ── Presets ───────────────────────────────────────────────────────────────
 const PRESETS = {
-  low:    { compact:true, rename:'hexadecimal', sa:true,  shuffle:false, enc:'none',   cf:false, dc:false, self:false, dbg:false, con:false, uni:false, split:false, num:false, label:'CB'  },
-  medium: { compact:true, rename:'hexadecimal', sa:true,  shuffle:true,  enc:'base64', cf:false, dc:false, self:false, dbg:false, con:false, uni:false, split:false, num:false, label:'TB'  },
-  high:   { compact:true, rename:'hexadecimal', sa:true,  shuffle:true,  enc:'rc4',   cf:true,  dc:false, self:true,  dbg:true,  con:false, uni:true,  split:true,  num:true,  label:'Cao' },
-  max:    { compact:true, rename:'mangled-shuffled', sa:true, shuffle:true, enc:'rc4', cf:true,  dc:true,  self:true,  dbg:true,  con:true,  uni:true,  split:true,  num:true,  label:'Max' }
+  low:    { compact:true, rename:'hexadecimal', sa:true, shuffle:false, enc:'none',   cf:false, cfT:0.3, dc:false, dcT:0.2, self:false, dbg:false, dbgInt:0, con:false, uni:false, split:false, num:false, label:'CB'  },
+  medium: { compact:true, rename:'hexadecimal', sa:true, shuffle:true,  enc:'base64', cf:false, cfT:0.3, dc:false, dcT:0.2, self:false, dbg:false, dbgInt:0, con:false, uni:false, split:false, num:false, label:'TB'  },
+  high:   { compact:true, rename:'hexadecimal', sa:true, shuffle:true,  enc:'rc4',   cf:true,  cfT:0.3, dc:false, dcT:0.2, self:true,  dbg:true,  dbgInt:0, con:false, uni:true,  split:true,  num:true,  label:'Cao' },
+  max:    { compact:true, rename:'mangled-shuffled', sa:true, shuffle:true, enc:'rc4', cf:true, cfT:0.4, dc:true,  dcT:0.2, self:true,  dbg:true,  dbgInt:0, con:true,  uni:true,  split:true,  num:true,  label:'Max' }
 };
 
 function applyPreset(level, btn) {
@@ -460,83 +577,84 @@ function applyPreset(level, btn) {
   btn.classList.add('active');
   const p = PRESETS[level];
   document.getElementById('protection').textContent = p.label;
-  document.getElementById('opt_compact').checked           = p.compact;
-  document.getElementById('opt_rename').value              = p.rename;
-  document.getElementById('opt_stringArray').checked       = p.sa;
-  document.getElementById('opt_shuffleStringArray').checked= p.shuffle;
-  document.getElementById('opt_stringEncoding').value      = p.enc;
-  document.getElementById('opt_controlFlow').checked       = p.cf;
-  document.getElementById('opt_deadCode').checked          = p.dc;
-  document.getElementById('opt_selfDefending').checked     = p.self;
-  document.getElementById('opt_debugProtection').checked   = p.dbg;
-  document.getElementById('opt_disableConsole').checked    = p.con;
-  document.getElementById('opt_unicode').checked           = p.uni;
-  document.getElementById('opt_splitStrings').checked      = p.split;
-  document.getElementById('opt_numbers').checked           = p.num;
+  const s = (id, v, isSelect) => { const el = document.getElementById(id); isSelect ? el.value = v : el.checked = v; };
+  s('opt_compact', p.compact); s('opt_rename', p.rename, true);
+  s('opt_stringArray', p.sa); s('opt_shuffleStringArray', p.shuffle);
+  s('opt_stringEncoding', p.enc, true);
+  s('opt_controlFlow', p.cf);
+  document.getElementById('opt_cfThreshold').value = p.cfT;
+  document.getElementById('cfVal').textContent = p.cfT.toFixed(1);
+  document.getElementById('cfSliderRow').style.display = p.cf ? 'block' : 'none';
+  s('opt_deadCode', p.dc);
+  document.getElementById('opt_dcThreshold').value = p.dcT;
+  document.getElementById('dcVal').textContent = p.dcT.toFixed(1);
+  document.getElementById('dcSliderRow').style.display = p.dc ? 'block' : 'none';
+  s('opt_selfDefending', p.self); s('opt_debugProtection', p.dbg);
+  document.getElementById('opt_dbgInterval').value = p.dbgInt;
+  document.getElementById('dbgVal').textContent = p.dbgInt + ' ms';
+  document.getElementById('dbgIntervalRow').style.display = p.dbg ? 'block' : 'none';
+  s('opt_disableConsole', p.con); s('opt_unicode', p.uni);
+  s('opt_splitStrings', p.split); s('opt_numbers', p.num);
+  updatePerfWarn();
 }
 
 // ── Obfuscate ─────────────────────────────────────────────────────────────
 function obfuscate() {
-  // Kiểm tra thư viện lần nữa trước khi chạy
-  if (typeof JavaScriptObfuscator === 'undefined') {
-    toast('❌ Thư viện chưa tải xong. Tải lại trang!', 'err');
-    return;
-  }
-
+  if (typeof JavaScriptObfuscator === 'undefined') { toast('Thư viện chưa tải. Tải lại trang!', 'err'); return; }
   const code = document.getElementById('inputCode').value.trim();
   if (!code) { toast('Hãy nhập JavaScript!', 'err'); return; }
-
   setLoading(true);
-  // Dùng setTimeout để UI kịp cập nhật trước khi chạy nặng
   setTimeout(() => {
     try {
-      const enc = document.getElementById('opt_stringEncoding').value;
-      const opts = {
-        compact:                    document.getElementById('opt_compact').checked,
-        identifierNamesGenerator:   document.getElementById('opt_rename').value,
-        stringArray:                document.getElementById('opt_stringArray').checked,
-        rotateStringArray:          document.getElementById('opt_stringArray').checked,
-        shuffleStringArray:         document.getElementById('opt_shuffleStringArray').checked,
-        stringArrayEncoding:        enc === 'none' ? [] : [enc],
-        selfDefending:              document.getElementById('opt_selfDefending').checked,
-        controlFlowFlattening:      document.getElementById('opt_controlFlow').checked,
-        controlFlowFlatteningThreshold: 0.75,
-        deadCodeInjection:          document.getElementById('opt_deadCode').checked,
-        deadCodeInjectionThreshold: 0.4,
-        debugProtection:            document.getElementById('opt_debugProtection').checked,
-        debugProtectionInterval:    document.getElementById('opt_debugProtection').checked ? 2000 : 0,
-        disableConsoleOutput:       document.getElementById('opt_disableConsole').checked,
-        unicodeEscapeSequence:      document.getElementById('opt_unicode').checked,
-        numbersToExpressions:       document.getElementById('opt_numbers').checked,
-        splitStrings:               document.getElementById('opt_splitStrings').checked,
-        splitStringsChunkLength:    5,
+      const enc    = document.getElementById('opt_stringEncoding').value;
+      const cfT    = parseFloat(document.getElementById('opt_cfThreshold').value);
+      const dcT    = parseFloat(document.getElementById('opt_dcThreshold').value);
+      const dbgInt = parseInt(document.getElementById('opt_dbgInterval').value);
+      const result = JavaScriptObfuscator.obfuscate(code, {
+        compact:                        document.getElementById('opt_compact').checked,
+        identifierNamesGenerator:       document.getElementById('opt_rename').value,
+        stringArray:                    document.getElementById('opt_stringArray').checked,
+        rotateStringArray:              document.getElementById('opt_stringArray').checked,
+        shuffleStringArray:             document.getElementById('opt_shuffleStringArray').checked,
+        stringArrayEncoding:            enc === 'none' ? [] : [enc],
+        selfDefending:                  document.getElementById('opt_selfDefending').checked,
+        controlFlowFlattening:          document.getElementById('opt_controlFlow').checked,
+        controlFlowFlatteningThreshold: cfT,
+        deadCodeInjection:              document.getElementById('opt_deadCode').checked,
+        deadCodeInjectionThreshold:     dcT,
+        debugProtection:                document.getElementById('opt_debugProtection').checked,
+        debugProtectionInterval:        dbgInt,
+        disableConsoleOutput:           document.getElementById('opt_disableConsole').checked,
+        unicodeEscapeSequence:          document.getElementById('opt_unicode').checked,
+        numbersToExpressions:           document.getElementById('opt_numbers').checked,
+        splitStrings:                   document.getElementById('opt_splitStrings').checked,
+        splitStringsChunkLength:        5,
         target: 'browser'
-      };
-
-      const result = JavaScriptObfuscator.obfuscate(code, opts);
+      });
       document.getElementById('outputCode').value = result.getObfuscatedCode();
-      updateStats();
-      setLoading(false);
-      toast('✓ Mã hoá thành công!', 'ok');
+      updateStats(); setLoading(false);
+      toast('Mã hoá thành công!', 'ok');
     } catch (e) {
       setLoading(false);
       toast('Lỗi: ' + e.message, 'err');
-      console.error('[JSCipher]', e);
     }
   }, 50);
 }
 
 function setLoading(on) {
   document.getElementById('spinner').classList.toggle('show', on);
-  document.getElementById('btnText').textContent = on ? 'Đang mã hoá...' : '⚡ Mã Hoá JavaScript';
+  document.getElementById('btnText').textContent = on ? 'Đang mã hoá...' : 'Mã Hoá JavaScript';
   document.getElementById('encryptBtn').disabled = on;
 }
 
-// ── File helpers ──────────────────────────────────────────────────────────
+// ── Helpers ───────────────────────────────────────────────────────────────
 function loadFile(e) {
   const file = e.target.files[0]; if (!file) return;
+  new FileReader().onload = ev => { document.getElementById('inputCode').value = ev.target.result; updateStats(); toast('Đã tải: ' + file.name, 'ok'); };
+  (new FileReader()).readAsText(file);
+  // re-read properly:
   const r = new FileReader();
-  r.onload = ev => { document.getElementById('inputCode').value = ev.target.result; updateStats(); toast('✓ ' + file.name, 'ok'); };
+  r.onload = ev => { document.getElementById('inputCode').value = ev.target.result; updateStats(); toast('Đã tải: ' + file.name, 'ok'); };
   r.readAsText(file);
 }
 
@@ -549,16 +667,16 @@ function clearAll() {
 function copyOutput() {
   const out = document.getElementById('outputCode').value;
   if (!out) { toast('Chưa có kết quả!', 'err'); return; }
-  navigator.clipboard.writeText(out).then(() => toast('✓ Đã copy!', 'ok'));
+  navigator.clipboard.writeText(out).then(() => toast('Đã copy vào clipboard!', 'ok'));
 }
 
 function downloadOutput() {
   const out = document.getElementById('outputCode').value;
   if (!out) { toast('Chưa có kết quả!', 'err'); return; }
   const a = document.createElement('a');
-  a.href = URL.createObjectURL(new Blob([out], { type: 'text/javascript' }));
+  a.href = URL.createObjectURL(new Blob([out], { type:'text/javascript' }));
   a.download = 'obfuscated.js'; a.click();
-  toast('✓ Đang tải về...', 'ok');
+  toast('Đang tải về...', 'ok');
 }
 
 function sendToGitHub() {
@@ -566,116 +684,100 @@ function sendToGitHub() {
   if (!out) { toast('Hãy mã hoá code trước!', 'err'); return; }
   document.getElementById('ghContent').value = out;
   document.querySelectorAll('.tab')[2].click();
-  toast('✓ Đã chuyển sang GitHub', 'info');
+  toast('Đã chuyển sang GitHub', 'info');
 }
 
 function loadFromObfuscator() {
   const out = document.getElementById('outputCode').value;
   if (!out) { toast('Chưa có code mã hoá!', 'err'); return; }
   document.getElementById('ghContent').value = out;
-  toast('✓ Đã tải!', 'ok');
+  toast('Đã tải!', 'ok');
 }
 
-// ── GitHub API ────────────────────────────────────────────────────────────
-function ghHeaders(token) {
-  return {
-    'Authorization': 'Bearer ' + token,
-    'Accept': 'application/vnd.github+json',
-    'Content-Type': 'application/json',
-    'X-GitHub-Api-Version': '2022-11-28'
-  };
-}
+// ── GitHub ────────────────────────────────────────────────────────────────
+const ghH = t => ({ 'Authorization':'Bearer '+t, 'Accept':'application/vnd.github+json', 'Content-Type':'application/json', 'X-GitHub-Api-Version':'2022-11-28' });
 
 function addLog(msg, type) {
   const log = document.getElementById('statusLog');
   if (log.textContent === 'Sẵn sàng...') log.innerHTML = '';
   const line = document.createElement('div');
-  line.className = type ? 'log-' + type : '';
-  line.textContent = '[' + new Date().toLocaleTimeString('vi-VN') + '] ' + msg;
-  log.appendChild(line);
-  log.scrollTop = log.scrollHeight;
+  line.className = type ? 'log-'+type : '';
+  line.textContent = '['+new Date().toLocaleTimeString('vi-VN')+'] '+msg;
+  log.appendChild(line); log.scrollTop = log.scrollHeight;
 }
-
 function clearLog() { document.getElementById('statusLog').innerHTML = ''; }
 
 async function checkRepo() {
   const token = document.getElementById('ghToken').value.trim();
   const owner = document.getElementById('ghOwner').value.trim();
   const repo  = document.getElementById('ghRepo').value.trim();
-  if (!token || !owner || !repo) { toast('Điền Token, Owner, Repo!', 'err'); return; }
-  addLog('Đang kết nối...', 'info');
+  if (!token||!owner||!repo) { toast('Điền Token, Owner, Repo!','err'); return; }
+  addLog('Đang kết nối...','info');
   try {
-    const res = await fetch(`https://api.github.com/repos/${owner}/${repo}`, { headers: ghHeaders(token) });
-    if (res.ok) {
-      const d = await res.json();
-      addLog(`✓ ${d.full_name} — branch: ${d.default_branch}`, 'ok');
-      toast('✓ Kết nối thành công!', 'ok');
-    } else {
-      const e = await res.json();
-      addLog('✗ ' + e.message, 'err');
-      toast('Lỗi: ' + e.message, 'err');
-    }
-  } catch (e) { addLog('✗ ' + e.message, 'err'); }
+    const res = await fetch(`https://api.github.com/repos/${owner}/${repo}`,{headers:ghH(token)});
+    if (res.ok) { const d=await res.json(); addLog(`Kết nối thành công: ${d.full_name} — branch: ${d.default_branch}`,'ok'); toast('Kết nối thành công!','ok'); }
+    else { const e=await res.json(); addLog('Lỗi: '+e.message,'err'); toast('Lỗi: '+e.message,'err'); }
+  } catch(e) { addLog('Lỗi mạng: '+e.message,'err'); }
 }
 
 async function uploadToGitHub() {
   const token   = document.getElementById('ghToken').value.trim();
   const owner   = document.getElementById('ghOwner').value.trim();
   const repo    = document.getElementById('ghRepo').value.trim();
-  const branch  = document.getElementById('ghBranch').value.trim() || 'main';
+  const branch  = document.getElementById('ghBranch').value.trim()||'main';
   const path    = document.getElementById('ghPath').value.trim();
-  const message = document.getElementById('ghMessage').value.trim() || 'Update via JSCipher';
+  const message = document.getElementById('ghMessage').value.trim()||'Update via JSCipher';
   const content = document.getElementById('ghContent').value;
-
-  if (!token || !owner || !repo || !path) { toast('Điền đủ thông tin!', 'err'); return; }
-  if (!content) { toast('Chưa có nội dung file!', 'err'); return; }
+  if (!token||!owner||!repo||!path) { toast('Điền đủ thông tin!','err'); return; }
+  if (!content) { toast('Chưa có nội dung file!','err'); return; }
 
   document.getElementById('uploadSpinner').classList.add('show');
   document.getElementById('uploadBtnText').textContent = 'Đang upload...';
   document.getElementById('uploadBtn').disabled = true;
-  clearLog();
-  addLog('Bắt đầu upload...', 'info');
+  clearLog(); addLog('Bắt đầu upload...','info');
 
   const encoded = btoa(unescape(encodeURIComponent(content)));
   let sha = null;
   try {
-    const check = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${path}?ref=${branch}`, { headers: ghHeaders(token) });
-    if (check.ok) { sha = (await check.json()).sha; addLog('File đã tồn tại → Cập nhật', 'warn'); }
-    else addLog('Tạo file mới', 'info');
-  } catch (_) {}
+    const check = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${path}?ref=${branch}`,{headers:ghH(token)});
+    if (check.ok) { sha=(await check.json()).sha; addLog('File đã tồn tại — sẽ cập nhật','warn'); }
+    else addLog('File chưa tồn tại — sẽ tạo mới','info');
+  } catch(_) {}
 
-  const body = { message, content: encoded, branch };
-  if (sha) body.sha = sha;
-
+  const body = {message, content:encoded, branch}; if (sha) body.sha=sha;
   try {
-    const res = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${path}`, {
-      method: 'PUT', headers: ghHeaders(token), body: JSON.stringify(body)
-    });
-    if (res.ok) {
-      const d = await res.json();
-      addLog('✓ Upload thành công!', 'ok');
-      addLog('↗ ' + d.content.html_url, 'ok');
-      toast('✓ Upload thành công!', 'ok');
-    } else {
-      const e = await res.json();
-      addLog('✗ ' + e.message, 'err');
-      toast('Lỗi: ' + e.message, 'err');
-    }
-  } catch (e) { addLog('✗ ' + e.message, 'err'); toast('Lỗi kết nối!', 'err'); }
+    const res = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${path}`,{method:'PUT',headers:ghH(token),body:JSON.stringify(body)});
+    if (res.ok) { const d=await res.json(); addLog('Upload thành công!','ok'); addLog(d.content.html_url,'ok'); toast('Upload thành công!','ok'); }
+    else { const e=await res.json(); addLog('Lỗi: '+e.message,'err'); toast('Lỗi: '+e.message,'err'); }
+  } catch(e) { addLog('Lỗi mạng: '+e.message,'err'); toast('Lỗi kết nối!','err'); }
 
   document.getElementById('uploadSpinner').classList.remove('show');
-  document.getElementById('uploadBtnText').textContent = '🐙 Upload lên GitHub';
+  document.getElementById('uploadBtnText').textContent = 'Upload lên GitHub';
   document.getElementById('uploadBtn').disabled = false;
 }
 
 // ── Toast ─────────────────────────────────────────────────────────────────
+const ICONS = {
+  ok:   '<polyline points="20 6 9 17 4 12"/>',
+  err:  '<circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>',
+  info: '<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>'
+};
 let toastTimer;
-function toast(msg, type = '') {
+function toast(msg, type='info') {
   const el = document.getElementById('toast');
-  el.className = 'toast ' + type + ' show';
-  el.textContent = msg;
+  document.getElementById('toastIcon').innerHTML = ICONS[type] || ICONS.info;
+  document.getElementById('toastMsg').textContent = msg;
+  el.className = 'toast '+type+' show';
   clearTimeout(toastTimer);
   toastTimer = setTimeout(() => el.classList.remove('show'), 2800);
+}
+
+// Fix duplicate FileReader in loadFile
+function loadFile(e) {
+  const file = e.target.files[0]; if (!file) return;
+  const r = new FileReader();
+  r.onload = ev => { document.getElementById('inputCode').value = ev.target.result; updateStats(); toast('Đã tải: ' + file.name, 'ok'); };
+  r.readAsText(file);
 }
 </script>
 </body>
