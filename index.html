@@ -1,784 +1,566 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>JSCipher</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/javascript-obfuscator@4.0.0/dist/index.browser.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/lucide@0.395.0/dist/umd/lucide.min.js"></script>
-<style>
-* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
-:root {
-  --bg:#0f1117; --surface:#1a1d27; --border:#2a2d3d;
-  --accent:#6c63ff; --accent-dim:rgba(108,99,255,0.15);
-  --green:#22c55e; --red:#ef4444; --yellow:#f59e0b; --orange:#f97316;
-  --text:#e2e4f0; --muted:#6b7280;
-  --mono:'JetBrains Mono',monospace; --sans:'Inter',sans-serif;
-}
-html,body { height:100%; }
-body { font-family:var(--sans); background:var(--bg); color:var(--text); font-size:15px; line-height:1.5; }
-.app { display:flex; flex-direction:column; min-height:100vh; }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Live Code Viewer - Dán code & xem index ngay</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-/* Lucide icon helper */
-.icon { display:inline-flex; align-items:center; justify-content:center; flex-shrink:0; }
-.icon svg { width:15px; height:15px; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; fill:none; }
-.icon-sm svg { width:13px; height:13px; }
-.icon-lg svg { width:18px; height:18px; }
+        body {
+            font-family: 'Segoe UI', 'Inter', system-ui, -apple-system, 'Roboto', sans-serif;
+            background: #f1f5f9;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
 
-/* Header */
-.header { display:flex; align-items:center; justify-content:space-between; padding:14px 16px; border-bottom:1px solid var(--border); background:var(--surface); position:sticky; top:0; z-index:50; }
-.brand { display:flex; align-items:center; gap:10px; }
-.brand-icon { width:32px; height:32px; background:var(--accent); border-radius:8px; display:flex; align-items:center; justify-content:center; font-family:var(--mono); font-size:13px; color:white; font-weight:500; }
-.brand-name { font-size:16px; font-weight:600; letter-spacing:-0.3px; }
-.brand-sub { font-size:11px; color:var(--muted); margin-top:1px; }
-.lib-status { display:flex; align-items:center; gap:6px; font-size:11px; color:var(--muted); }
-.lib-dot { width:7px; height:7px; border-radius:50%; background:var(--yellow); flex-shrink:0; }
-.lib-dot.ok { background:var(--green); }
-.lib-dot.err { background:var(--red); }
+        /* HEADER + thanh công cụ */
+        .toolbar-header {
+            background: white;
+            border-bottom: 1px solid #e2e8f0;
+            padding: 0.75rem 1.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            z-index: 10;
+        }
 
-/* Tabs */
-.tabs { display:flex; background:var(--surface); border-bottom:1px solid var(--border); padding:0 16px; overflow-x:auto; scrollbar-width:none; }
-.tabs::-webkit-scrollbar { display:none; }
-.tab { display:flex; align-items:center; gap:7px; padding:12px 16px; font-size:13px; font-weight:500; color:var(--muted); cursor:pointer; border:none; background:none; white-space:nowrap; border-bottom:2px solid transparent; transition:all 0.15s; font-family:var(--sans); }
-.tab svg { width:14px; height:14px; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; fill:none; }
-.tab.active { color:var(--accent); border-bottom-color:var(--accent); }
-.tab:hover:not(.active) { color:var(--text); }
+        .logo-area h1 {
+            font-size: 1.35rem;
+            font-weight: 600;
+            background: linear-gradient(135deg, #0f2b3d, #1e6f5c);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+            letter-spacing: -0.2px;
+        }
+        .logo-area p {
+            font-size: 0.75rem;
+            color: #475569;
+            margin-top: 2px;
+        }
 
-/* Content */
-.content { flex:1; padding:16px; max-width:800px; margin:0 auto; width:100%; }
-.page { display:none; flex-direction:column; gap:12px; }
-.page.active { display:flex; }
+        .button-group {
+            display: flex;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+        }
 
-/* Card */
-.card { background:var(--surface); border:1px solid var(--border); border-radius:12px; overflow:hidden; }
-.card-header { display:flex; align-items:center; justify-content:space-between; padding:12px 14px; border-bottom:1px solid var(--border); }
-.card-title { font-size:12px; font-weight:600; letter-spacing:0.5px; text-transform:uppercase; color:var(--muted); }
-.card-actions { display:flex; gap:6px; }
+        .btn {
+            border: none;
+            padding: 0.5rem 1.2rem;
+            font-weight: 500;
+            font-size: 0.85rem;
+            border-radius: 40px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            background-color: #f1f5f9;
+            color: #1e293b;
+            box-shadow: 0 1px 1px rgba(0,0,0,0.05);
+        }
 
-/* Textarea */
-textarea { width:100%; background:transparent; border:none; color:var(--text); font-family:var(--mono); font-size:13px; line-height:1.6; padding:14px; resize:none; outline:none; min-height:180px; }
-textarea::placeholder { color:var(--muted); }
-#outputCode { color:#7dd3fc; min-height:160px; }
+        .btn-primary {
+            background: #0f2b3d;
+            color: white;
+            box-shadow: 0 2px 5px rgba(15,43,61,0.2);
+        }
+        .btn-primary:hover {
+            background: #1a4b5e;
+            transform: translateY(-1px);
+        }
 
-/* Buttons */
-.btn { display:inline-flex; align-items:center; gap:6px; padding:7px 12px; font-size:12px; font-weight:500; font-family:var(--sans); border-radius:7px; border:1px solid var(--border); background:transparent; color:var(--muted); cursor:pointer; transition:all 0.15s; white-space:nowrap; }
-.btn svg { width:13px; height:13px; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; fill:none; flex-shrink:0; }
-.btn:hover { color:var(--text); border-color:#444; }
-.btn:active { transform:scale(0.97); }
-.btn-icon { padding:7px 9px; }
-.btn-primary { background:var(--accent); border-color:var(--accent); color:white; font-size:14px; padding:13px 20px; width:100%; justify-content:center; border-radius:10px; font-weight:600; }
-.btn-primary svg { width:16px; height:16px; }
-.btn-primary:hover { background:#7c75ff; border-color:#7c75ff; color:white; }
-.btn-primary:disabled { opacity:0.5; cursor:not-allowed; }
+        .btn-secondary {
+            background: #e2e8f0;
+            color: #0f172a;
+        }
+        .btn-secondary:hover {
+            background: #cbd5e1;
+        }
 
-/* Stats */
-.stats { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
-.stat { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:12px; text-align:center; }
-.stat-val { font-family:var(--mono); font-size:17px; font-weight:500; color:var(--accent); }
-.stat-label { font-size:11px; color:var(--muted); margin-top:2px; }
+        .btn-outline {
+            background: transparent;
+            border: 1px solid #cbd5e1;
+        }
+        .btn-outline:hover {
+            background: #f8fafc;
+            border-color: #94a3b8;
+        }
 
-/* Presets */
-.presets { display:flex; gap:6px; flex-wrap:wrap; padding:12px 14px; border-bottom:1px solid var(--border); }
-.pill { padding:5px 13px; font-size:12px; font-weight:500; border-radius:20px; border:1px solid var(--border); background:transparent; color:var(--muted); cursor:pointer; transition:all 0.15s; font-family:var(--sans); }
-.pill.active,.pill:hover { background:var(--accent-dim); border-color:var(--accent); color:var(--accent); }
+        /* shortcut hint */
+        .shortcut-hint {
+            font-size: 0.7rem;
+            background: #eef2ff;
+            padding: 0.25rem 0.75rem;
+            border-radius: 30px;
+            color: #1e40af;
+            font-family: monospace;
+        }
 
-/* Section label */
-.section-label { display:flex; align-items:center; gap:8px; font-size:11px; font-weight:600; letter-spacing:0.5px; text-transform:uppercase; color:var(--muted); padding:12px 14px 6px; }
+        /* MAIN LAYOUT (2 cột) */
+        .main-container {
+            display: flex;
+            flex: 1;
+            gap: 0;
+            overflow: hidden;
+            padding: 0.75rem 1rem 1rem 1rem;
+            background: #e9eef3;
+        }
 
-/* Tag */
-.tag { display:inline-flex; align-items:center; gap:3px; padding:2px 6px; border-radius:4px; font-size:10px; font-weight:600; }
-.tag svg { width:10px; height:10px; stroke:currentColor; stroke-width:2.5; stroke-linecap:round; stroke-linejoin:round; fill:none; }
-.tag-slow { background:rgba(249,115,22,0.12); color:var(--orange); border:1px solid rgba(249,115,22,0.25); }
-.tag-safe { background:rgba(34,197,94,0.1); color:var(--green); border:1px solid rgba(34,197,94,0.2); }
+        /* Panel soạn thảo */
+        .editor-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: #ffffff;
+            border-radius: 20px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.05);
+            margin-right: 0.75rem;
+            overflow: hidden;
+            border: 1px solid #e2e8f0;
+        }
 
-/* Opt row */
-.opt { display:flex; align-items:center; justify-content:space-between; padding:10px 14px; gap:12px; }
-.opt+.opt { border-top:1px solid var(--border); }
-.opt-info { flex:1; min-width:0; }
-.opt-name { font-size:13px; font-weight:500; display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
-.opt-desc { font-size:11px; color:var(--muted); margin-top:2px; }
+        .panel-header {
+            background: #fefefe;
+            padding: 0.75rem 1.2rem;
+            border-bottom: 1px solid #e9edf2;
+            font-weight: 600;
+            font-size: 0.85rem;
+            color: #0f2b3d;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            letter-spacing: 0.3px;
+        }
 
-/* Toggle */
-.toggle { position:relative; width:40px; height:22px; flex-shrink:0; cursor:pointer; }
-.toggle input { opacity:0; width:0; height:0; position:absolute; }
-.toggle-track { position:absolute; inset:0; background:var(--border); border-radius:22px; transition:background 0.2s; }
-.toggle-thumb { position:absolute; width:16px; height:16px; background:#666; border-radius:50%; top:3px; left:3px; transition:all 0.2s; pointer-events:none; }
-.toggle input:checked ~ .toggle-track { background:var(--accent); }
-.toggle input:checked ~ .toggle-thumb { left:21px; background:white; }
+        .panel-header span {
+            background: #eef2ff;
+            padding: 0.2rem 0.6rem;
+            border-radius: 30px;
+            font-family: monospace;
+            font-size: 0.7rem;
+        }
 
-/* Select */
-.opt-select { background:var(--bg); border:1px solid var(--border); color:var(--text); padding:5px 8px; font-size:12px; font-family:var(--mono); border-radius:7px; outline:none; cursor:pointer; }
-.opt-select:focus { border-color:var(--accent); }
+        textarea {
+            flex: 1;
+            width: 100%;
+            padding: 1.2rem;
+            font-family: 'Fira Code', 'Cascadia Code', 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            line-height: 1.5;
+            border: none;
+            resize: none;
+            background: #fefcf5;
+            color: #0a0c10;
+            outline: none;
+            tab-size: 4;
+        }
 
-/* Slider */
-.slider-row { padding:10px 14px; border-top:1px solid var(--border); }
-.slider-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:4px; }
-.slider-name { font-size:13px; font-weight:500; }
-.slider-val { font-family:var(--mono); font-size:12px; color:var(--accent); }
-.slider-desc { font-size:11px; color:var(--muted); margin-bottom:8px; }
-input[type=range] { width:100%; height:4px; border-radius:4px; outline:none; border:none; background:var(--border); cursor:pointer; -webkit-appearance:none; appearance:none; }
-input[type=range]::-webkit-slider-thumb { -webkit-appearance:none; width:16px; height:16px; border-radius:50%; background:var(--accent); cursor:pointer; box-shadow:0 0 0 3px var(--accent-dim); }
-input[type=range]::-moz-range-thumb { width:16px; height:16px; border-radius:50%; background:var(--accent); border:none; cursor:pointer; }
+        textarea:focus {
+            background: #ffffff;
+        }
 
-/* Perf warning */
-.perf-warn { display:none; background:rgba(249,115,22,0.07); border:1px solid rgba(249,115,22,0.3); border-radius:10px; padding:11px 14px; font-size:12px; color:var(--orange); line-height:1.6; align-items:flex-start; gap:9px; }
-.perf-warn.show { display:flex; }
-.perf-warn svg { width:15px; height:15px; stroke:var(--orange); stroke-width:2; stroke-linecap:round; stroke-linejoin:round; fill:none; flex-shrink:0; margin-top:1px; }
+        /* Panel preview */
+        .preview-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.05);
+            margin-left: 0.75rem;
+            overflow: hidden;
+            border: 1px solid #e2e8f0;
+        }
 
-/* Error banner */
-.err-banner { display:none; background:rgba(239,68,68,0.08); border:1px solid var(--red); border-radius:10px; padding:12px 14px; font-size:13px; color:var(--red); line-height:1.6; }
-.err-banner.show { display:block; }
+        .preview-header {
+            background: #fefefe;
+            padding: 0.75rem 1.2rem;
+            border-bottom: 1px solid #e9edf2;
+            font-weight: 600;
+            font-size: 0.85rem;
+            color: #0f2b3d;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
 
-/* Fields */
-.fields { display:flex; flex-direction:column; gap:10px; padding:14px; }
-.field label { display:block; font-size:12px; font-weight:500; color:var(--muted); margin-bottom:5px; }
-.field input { width:100%; background:var(--bg); border:1px solid var(--border); color:var(--text); padding:10px 12px; font-family:var(--mono); font-size:13px; border-radius:8px; outline:none; transition:border-color 0.15s; -webkit-appearance:none; }
-.field input:focus { border-color:var(--accent); }
-.field input::placeholder { color:var(--muted); }
+        .badge-preview {
+            background: #dcfce7;
+            color: #15803d;
+            font-size: 0.7rem;
+            padding: 0.2rem 0.7rem;
+            border-radius: 30px;
+            font-weight: normal;
+        }
 
-/* Log */
-.log { font-family:var(--mono); font-size:12px; line-height:1.8; padding:12px 14px; min-height:80px; color:var(--muted); }
-.log-ok { color:var(--green); }
-.log-err { color:var(--red); }
-.log-info { color:var(--accent); }
-.log-warn { color:var(--yellow); }
+        .iframe-wrapper {
+            flex: 1;
+            background: #fff;
+            position: relative;
+        }
 
-/* Spinner */
-.spinner { display:none; width:15px; height:15px; border:2px solid rgba(255,255,255,0.25); border-top-color:white; border-radius:50%; animation:spin 0.7s linear infinite; flex-shrink:0; }
-.spinner.show { display:inline-block; }
-@keyframes spin { to { transform:rotate(360deg); } }
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            background: white;
+        }
 
-/* Toast */
-.toast { position:fixed; bottom:20px; left:50%; transform:translateX(-50%) translateY(80px); background:var(--surface); border:1px solid var(--border); color:var(--text); padding:10px 18px; border-radius:10px; font-size:13px; font-weight:500; display:flex; align-items:center; gap:8px; white-space:nowrap; box-shadow:0 8px 32px rgba(0,0,0,0.5); transition:transform 0.3s cubic-bezier(0.34,1.56,0.64,1),opacity 0.3s; opacity:0; z-index:999; max-width:calc(100vw - 32px); overflow:hidden; text-overflow:ellipsis; }
-.toast svg { width:14px; height:14px; stroke:currentColor; stroke-width:2.5; stroke-linecap:round; stroke-linejoin:round; fill:none; flex-shrink:0; }
-.toast.show { transform:translateX(-50%) translateY(0); opacity:1; }
-.toast.ok  { border-color:var(--green);  color:var(--green); }
-.toast.err { border-color:var(--red);    color:var(--red); }
-.toast.info{ border-color:var(--accent); color:var(--accent); }
+        /* responsive: mobile & tablet */
+        @media (max-width: 780px) {
+            .main-container {
+                flex-direction: column;
+                gap: 1rem;
+                padding: 0.75rem;
+            }
+            .editor-panel, .preview-panel {
+                margin: 0;
+                min-height: 45vh;
+            }
+            .editor-panel {
+                margin-bottom: 0.5rem;
+            }
+            .preview-panel {
+                margin-top: 0.5rem;
+            }
+            .toolbar-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .button-group {
+                width: 100%;
+                justify-content: flex-start;
+            }
+        }
 
-.info-box { background:rgba(108,99,255,0.08); border:1px solid rgba(108,99,255,0.2); border-radius:10px; padding:12px 14px; font-size:13px; color:var(--muted); line-height:1.6; display:flex; gap:10px; align-items:flex-start; }
-.info-box svg { width:15px; height:15px; stroke:var(--accent); stroke-width:2; stroke-linecap:round; stroke-linejoin:round; fill:none; flex-shrink:0; margin-top:2px; }
-.info-box a { color:var(--accent); text-decoration:none; }
-
-.file-btn { display:inline-flex; align-items:center; gap:6px; padding:7px 12px; font-size:12px; font-weight:500; font-family:var(--sans); border-radius:7px; border:1px solid var(--border); background:transparent; color:var(--muted); cursor:pointer; transition:all 0.15s; }
-.file-btn svg { width:13px; height:13px; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; fill:none; }
-.file-btn:hover { color:var(--text); border-color:#444; }
-
-@media(max-width:480px){
-  .content { padding:12px; }
-  textarea { font-size:12px; }
-  .stat-val { font-size:15px; }
-  .brand-sub { display:none; }
-}
-</style>
+        /* scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 10px;
+        }
+    </style>
 </head>
 <body>
-<div class="app">
 
-  <!-- Header -->
-  <div class="header">
-    <div class="brand">
-      <div class="brand-icon">JS</div>
-      <div>
-        <div class="brand-name">JSCipher</div>
-        <div class="brand-sub">JavaScript Obfuscator</div>
-      </div>
+<div class="toolbar-header">
+    <div class="logo-area">
+        <h1>🧩 Live Index Viewer</h1>
+        <p>Dán mã HTML/CSS/JS → nhấn Run · Xem kết quả realtime</p>
     </div>
-    <div class="lib-status">
-      <div class="lib-dot" id="libDot"></div>
-      <span id="libLabel">Loading...</span>
+    <div class="button-group">
+        <button class="btn btn-primary" id="runBtn">▶️ Run & Preview</button>
+        <button class="btn btn-secondary" id="resetBtn">🔄 Reset mẫu</button>
+        <button class="btn btn-outline" id="clearBtn">🗑️ Xóa code</button>
+        <div class="shortcut-hint">⌘ / Ctrl + Enter</div>
     </div>
-  </div>
-
-  <!-- Tabs -->
-  <div class="tabs">
-    <button class="tab active" onclick="switchTab('obfuscate',this)">
-      <svg viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-      Mã Hoá
-    </button>
-    <button class="tab" onclick="switchTab('options',this)">
-      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07M8.46 8.46a5 5 0 0 0 0 7.07"/></svg>
-      Tuỳ Chọn
-    </button>
-    <button class="tab" onclick="switchTab('github',this)">
-      <svg viewBox="0 0 24 24"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>
-      GitHub
-    </button>
-  </div>
-
-  <div class="content">
-
-    <div class="err-banner" id="errBanner">
-      Không tải được thư viện mã hoá. Kiểm tra kết nối mạng rồi tải lại trang.<br>
-      <small style="opacity:0.7"><span id="errMsg"></span></small>
-    </div>
-
-    <!-- PAGE: MÃ HOÁ -->
-    <div id="page-obfuscate" class="page active">
-
-      <div class="stats">
-        <div class="stat"><div class="stat-val" id="inputSize">0B</div><div class="stat-label">Input</div></div>
-        <div class="stat"><div class="stat-val" id="outputSize">0B</div><div class="stat-label">Output</div></div>
-        <div class="stat"><div class="stat-val" id="protection">TB</div><div class="stat-label">Mức độ</div></div>
-      </div>
-
-      <div class="card">
-        <div class="card-header">
-          <span class="card-title">Code gốc</span>
-          <div class="card-actions">
-            <label class="file-btn">
-              <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-              Upload
-              <input type="file" accept=".js,.ts,.txt" style="display:none" onchange="loadFile(event)">
-            </label>
-            <button class="btn" onclick="clearAll()">
-              <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
-              Xoá
-            </button>
-          </div>
-        </div>
-        <textarea id="inputCode" placeholder="// Dán JavaScript vào đây..." oninput="updateStats()" spellcheck="false" autocorrect="off" autocapitalize="off"></textarea>
-      </div>
-
-      <!-- Perf warning -->
-      <div class="perf-warn" id="perfWarn">
-        <svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-        <span id="perfWarnText"></span>
-      </div>
-
-      <button class="btn btn-primary" onclick="obfuscate()" id="encryptBtn">
-        <div class="spinner" id="spinner"></div>
-        <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-        <span id="btnText">Mã Hoá JavaScript</span>
-      </button>
-
-      <div class="card">
-        <div class="card-header">
-          <span class="card-title">Kết quả</span>
-          <div class="card-actions">
-            <button class="btn" onclick="copyOutput()">
-              <svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-              Copy
-            </button>
-            <button class="btn" onclick="downloadOutput()">
-              <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-              Tải
-            </button>
-            <button class="btn btn-icon" onclick="sendToGitHub()" title="Gửi lên GitHub">
-              <svg viewBox="0 0 24 24"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>
-            </button>
-          </div>
-        </div>
-        <textarea id="outputCode" readonly placeholder="// Kết quả hiện ở đây..." spellcheck="false"></textarea>
-      </div>
-
-    </div>
-
-    <!-- PAGE: TUỲ CHỌN -->
-    <div id="page-options" class="page">
-
-      <div class="card">
-        <div class="card-header"><span class="card-title">Preset nhanh</span></div>
-        <div class="presets">
-          <button class="pill" onclick="applyPreset('low',this)">Cơ Bản</button>
-          <button class="pill active" onclick="applyPreset('medium',this)">Trung Bình</button>
-          <button class="pill" onclick="applyPreset('high',this)">Cao</button>
-          <button class="pill" onclick="applyPreset('max',this)">Tối Đa</button>
-        </div>
-      </div>
-
-      <!-- Safe options -->
-      <div class="card">
-        <div class="section-label">
-          Làm rối mã nguồn
-          <span class="tag tag-safe">
-            <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
-            Không lag
-          </span>
-        </div>
-        <div class="opt">
-          <div class="opt-info"><div class="opt-name">Compact</div><div class="opt-desc">Nén thành một dòng</div></div>
-          <label class="toggle"><input type="checkbox" id="opt_compact" checked><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
-        </div>
-        <div class="opt">
-          <div class="opt-info"><div class="opt-name">Đổi tên biến</div></div>
-          <select class="opt-select" id="opt_rename">
-            <option value="hexadecimal">Hex</option>
-            <option value="mangled">Mangled</option>
-            <option value="mangled-shuffled">Shuffled</option>
-          </select>
-        </div>
-        <div class="opt">
-          <div class="opt-info"><div class="opt-name">String Array</div><div class="opt-desc">Mã hoá chuỗi ký tự</div></div>
-          <label class="toggle"><input type="checkbox" id="opt_stringArray" checked><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
-        </div>
-        <div class="opt">
-          <div class="opt-info"><div class="opt-name">Mã hoá chuỗi</div></div>
-          <select class="opt-select" id="opt_stringEncoding">
-            <option value="base64">Base64</option>
-            <option value="rc4">RC4</option>
-            <option value="none">Không</option>
-          </select>
-        </div>
-        <div class="opt">
-          <div class="opt-info"><div class="opt-name">Xáo trộn chuỗi</div></div>
-          <label class="toggle"><input type="checkbox" id="opt_shuffleStringArray" checked><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
-        </div>
-        <div class="opt">
-          <div class="opt-info"><div class="opt-name">Unicode Escape</div><div class="opt-desc">String → \uXXXX</div></div>
-          <label class="toggle"><input type="checkbox" id="opt_unicode"><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
-        </div>
-        <div class="opt">
-          <div class="opt-info"><div class="opt-name">Tách chuỗi</div><div class="opt-desc">Chia nhỏ string literals</div></div>
-          <label class="toggle"><input type="checkbox" id="opt_splitStrings"><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
-        </div>
-      </div>
-
-      <!-- Heavy options -->
-      <div class="card">
-        <div class="section-label">
-          Bảo vệ nâng cao
-          <span class="tag tag-slow">
-            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-            Ảnh hưởng tốc độ
-          </span>
-        </div>
-
-        <!-- Control Flow -->
-        <div class="opt">
-          <div class="opt-info">
-            <div class="opt-name">
-              Control Flow Flatten
-              <span class="tag tag-slow">
-                <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-                Chậm
-              </span>
-            </div>
-            <div class="opt-desc">Làm phức tạp luồng thực thi</div>
-          </div>
-          <label class="toggle"><input type="checkbox" id="opt_controlFlow" onchange="onCfChange()"><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
-        </div>
-        <div class="slider-row" id="cfSliderRow" style="display:none">
-          <div class="slider-header"><span class="slider-name">Threshold</span><span class="slider-val" id="cfVal">0.3</span></div>
-          <div class="slider-desc">Khuyến nghị ≤ 0.4 để tránh lag</div>
-          <input type="range" id="opt_cfThreshold" min="0.1" max="1" step="0.1" value="0.3"
-            oninput="document.getElementById('cfVal').textContent=parseFloat(this.value).toFixed(1);updatePerfWarn()">
-        </div>
-
-        <!-- Dead Code -->
-        <div class="opt" style="border-top:1px solid var(--border)">
-          <div class="opt-info">
-            <div class="opt-name">
-              Dead Code Injection
-              <span class="tag tag-slow">
-                <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-                Chậm
-              </span>
-            </div>
-            <div class="opt-desc">Chèn code giả, tăng kích thước file</div>
-          </div>
-          <label class="toggle"><input type="checkbox" id="opt_deadCode" onchange="onDcChange()"><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
-        </div>
-        <div class="slider-row" id="dcSliderRow" style="display:none">
-          <div class="slider-header"><span class="slider-name">Threshold</span><span class="slider-val" id="dcVal">0.2</span></div>
-          <div class="slider-desc">Khuyến nghị ≤ 0.3</div>
-          <input type="range" id="opt_dcThreshold" min="0.1" max="1" step="0.1" value="0.2"
-            oninput="document.getElementById('dcVal').textContent=parseFloat(this.value).toFixed(1);updatePerfWarn()">
-        </div>
-
-        <!-- Self Defending -->
-        <div class="opt" style="border-top:1px solid var(--border)">
-          <div class="opt-info"><div class="opt-name">Self Defending</div><div class="opt-desc">Chống format lại code</div></div>
-          <label class="toggle"><input type="checkbox" id="opt_selfDefending"><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
-        </div>
-
-        <!-- Debug Protection -->
-        <div class="opt" style="border-top:1px solid var(--border)">
-          <div class="opt-info">
-            <div class="opt-name">
-              Debug Protection
-              <span class="tag tag-slow">
-                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                Interval
-              </span>
-            </div>
-            <div class="opt-desc">Chặn DevTools</div>
-          </div>
-          <label class="toggle"><input type="checkbox" id="opt_debugProtection" onchange="onDbgChange()"><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
-        </div>
-        <div class="slider-row" id="dbgIntervalRow" style="display:none">
-          <div class="slider-header"><span class="slider-name">Interval</span><span class="slider-val" id="dbgVal">0 ms</span></div>
-          <div class="slider-desc">0 = chỉ chạy 1 lần khi load, &gt; 0 = chạy lặp (lag)</div>
-          <input type="range" id="opt_dbgInterval" min="0" max="4000" step="500" value="0"
-            oninput="document.getElementById('dbgVal').textContent=this.value+' ms';updatePerfWarn()">
-        </div>
-
-        <!-- Disable Console -->
-        <div class="opt" style="border-top:1px solid var(--border)">
-          <div class="opt-info"><div class="opt-name">Tắt Console</div><div class="opt-desc">Chặn console.log</div></div>
-          <label class="toggle"><input type="checkbox" id="opt_disableConsole"><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
-        </div>
-
-        <!-- Numbers -->
-        <div class="opt" style="border-top:1px solid var(--border)">
-          <div class="opt-info"><div class="opt-name">Số → Biểu thức</div><div class="opt-desc">Chuyển số thành phép tính</div></div>
-          <label class="toggle"><input type="checkbox" id="opt_numbers"><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
-        </div>
-      </div>
-
-    </div>
-
-    <!-- PAGE: GITHUB -->
-    <div id="page-github" class="page">
-
-      <div class="card">
-        <div class="card-header">
-          <span class="card-title">Nội dung file</span>
-          <button class="btn" onclick="loadFromObfuscator()">
-            <svg viewBox="0 0 24 24"><polyline points="15 14 20 9 15 4"/><path d="M4 20v-7a4 4 0 0 1 4-4h12"/></svg>
-            Lấy từ Mã Hoá
-          </button>
-        </div>
-        <textarea id="ghContent" style="color:#7dd3fc;min-height:130px" placeholder="// Code cần upload..." spellcheck="false" autocapitalize="off"></textarea>
-      </div>
-
-      <div class="card">
-        <div class="card-header"><span class="card-title">Cấu hình GitHub</span></div>
-        <div class="fields">
-          <div class="field"><label>Personal Access Token</label><input type="password" id="ghToken" placeholder="ghp_xxxxxxxxxxxxxxxx" autocomplete="off"></div>
-          <div class="field"><label>Username / Owner</label><input type="text" id="ghOwner" placeholder="your-username" autocomplete="off" autocapitalize="off"></div>
-          <div class="field"><label>Repository</label><input type="text" id="ghRepo" placeholder="my-repo" autocapitalize="off"></div>
-          <div class="field"><label>Branch</label><input type="text" id="ghBranch" value="main" autocapitalize="off"></div>
-          <div class="field"><label>Đường dẫn file trong repo</label><input type="text" id="ghPath" placeholder="src/app.js" autocapitalize="off"></div>
-          <div class="field"><label>Commit message</label><input type="text" id="ghMessage" value="feat: add obfuscated JS via JSCipher"></div>
-          <button class="btn btn-primary" onclick="uploadToGitHub()" id="uploadBtn">
-            <div class="spinner" id="uploadSpinner"></div>
-            <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-            <span id="uploadBtnText">Upload lên GitHub</span>
-          </button>
-          <button class="btn" style="justify-content:center;padding:10px" onclick="checkRepo()">
-            <svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-            Kiểm tra kết nối
-          </button>
-        </div>
-      </div>
-
-      <div class="info-box">
-        <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-        <span>
-          Token không được lưu trên server. Tạo token với scope <strong>repo</strong> tại
-          <a href="https://github.com/settings/tokens" target="_blank">github.com/settings/tokens</a>
-        </span>
-      </div>
-
-      <div class="card">
-        <div class="card-header">
-          <span class="card-title">Nhật ký</span>
-          <button class="btn" onclick="clearLog()">
-            <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
-            Xoá
-          </button>
-        </div>
-        <div class="log" id="statusLog">Sẵn sàng...</div>
-      </div>
-
-    </div>
-
-  </div>
 </div>
 
-<!-- Toast -->
-<div class="toast" id="toast">
-  <svg id="toastIcon" viewBox="0 0 24 24"></svg>
-  <span id="toastMsg"></span>
+<div class="main-container">
+    <!-- Editor panel -->
+    <div class="editor-panel">
+        <div class="panel-header">
+            📝 Mã nguồn (HTML / CSS / JS)
+            <span>Dán code của bạn vào đây</span>
+        </div>
+        <textarea id="codeEditor" spellcheck="false" placeholder="&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+&lt;head&gt;
+    &lt;title&gt;Trang của bạn&lt;/title&gt;
+    &lt;style&gt;
+        body { font-family: system-ui; background: #f0f9ff; margin: 2rem; }
+        .card { background: white; padding: 2rem; border-radius: 24px; }
+    &lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+    &lt;div class=&quot;card&quot;&gt;
+        &lt;h1&gt;Xin chào! 👋&lt;/h1&gt;
+        &lt;p&gt;Hãy dán bất kỳ code HTML nào vào khung bên trái và nhấn Run.&lt;/p&gt;
+        &lt;button onclick=&quot;alert('Bạn vừa click demo!')&quot;&gt;Thử ngay&lt;/button&gt;
+    &lt;/div&gt;
+&lt;/body&gt;
+&lt;/html&gt;"></textarea>
+    </div>
+
+    <!-- Preview panel -->
+    <div class="preview-panel">
+        <div class="preview-header">
+            🌐 Kết quả hiển thị (Index Preview)
+            <span class="badge-preview">⚡ live render</span>
+        </div>
+        <div class="iframe-wrapper">
+            <iframe id="previewFrame" title="live preview" sandbox="allow-same-origin allow-scripts allow-popups allow-forms allow-modals allow-downloads"></iframe>
+        </div>
+    </div>
 </div>
 
 <script>
-// ── Lib check ─────────────────────────────────────────────────────────────
-window.addEventListener('load', () => {
-  const dot = document.getElementById('libDot');
-  const lbl = document.getElementById('libLabel');
-  if (typeof JavaScriptObfuscator !== 'undefined') {
-    dot.classList.add('ok'); lbl.textContent = 'Sẵn sàng'; lbl.style.color = 'var(--green)';
-  } else {
-    dot.classList.add('err'); lbl.textContent = 'Lỗi thư viện'; lbl.style.color = 'var(--red)';
-    document.getElementById('errBanner').classList.add('show');
-    document.getElementById('errMsg').textContent = 'JavaScriptObfuscator is not defined — tải lại trang';
-    document.getElementById('encryptBtn').disabled = true;
-  }
-});
+    (function() {
+        // DOM elements
+        const editor = document.getElementById('codeEditor');
+        const iframe = document.getElementById('previewFrame');
+        const runBtn = document.getElementById('runBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const clearBtn = document.getElementById('clearBtn');
 
-// ── Tabs ──────────────────────────────────────────────────────────────────
-function switchTab(name, el) {
-  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  el.classList.add('active');
-  document.getElementById('page-' + name).classList.add('active');
-}
+        // Quản lý blob URL để tránh rò rỉ bộ nhớ
+        let currentBlobUrl = null;
 
-// ── Slider toggles ────────────────────────────────────────────────────────
-function onCfChange() {
-  const on = document.getElementById('opt_controlFlow').checked;
-  document.getElementById('cfSliderRow').style.display = on ? 'block' : 'none';
-  updatePerfWarn();
-}
-function onDcChange() {
-  const on = document.getElementById('opt_deadCode').checked;
-  document.getElementById('dcSliderRow').style.display = on ? 'block' : 'none';
-  updatePerfWarn();
-}
-function onDbgChange() {
-  const on = document.getElementById('opt_debugProtection').checked;
-  document.getElementById('dbgIntervalRow').style.display = on ? 'block' : 'none';
-  updatePerfWarn();
-}
+        // --- MẪU CODE MẶC ĐỊNH (đẹp, thể hiện đầy đủ khả năng) ---
+        const DEFAULT_CODE = `<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Preview Demo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            background: linear-gradient(145deg, #f5f7fc 0%, #eef2f9 100%);
+            font-family: 'Segoe UI', system-ui, 'Inter', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 1.5rem;
+        }
+        .glass-card {
+            background: rgba(255,255,255,0.92);
+            backdrop-filter: blur(2px);
+            border-radius: 2rem;
+            box-shadow: 0 20px 35px -12px rgba(0,0,0,0.2);
+            padding: 2rem 2.2rem;
+            max-width: 600px;
+            width: 100%;
+            text-align: center;
+            border: 1px solid rgba(255,255,255,0.5);
+            transition: all 0.2s;
+        }
+        h1 {
+            font-size: 2rem;
+            background: linear-gradient(120deg, #0b3b3c, #2c786c);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+            margin-bottom: 0.75rem;
+        }
+        .badge {
+            background: #e9f5f2;
+            padding: 0.3rem 1rem;
+            border-radius: 60px;
+            display: inline-block;
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: #1f6e5c;
+            margin-bottom: 1rem;
+        }
+        p {
+            color: #2c3e4e;
+            line-height: 1.5;
+            margin: 1rem 0;
+        }
+        button {
+            background: #1f6e5c;
+            border: none;
+            color: white;
+            padding: 0.7rem 1.6rem;
+            border-radius: 40px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+            margin-top: 1rem;
+            transition: all 0.2s;
+            box-shadow: 0 3px 8px rgba(0,0,0,0.1);
+        }
+        button:hover {
+            background: #0f5546;
+            transform: scale(0.98);
+        }
+        .feature-list {
+            text-align: left;
+            background: #f9fbfd;
+            padding: 1rem;
+            border-radius: 1.2rem;
+            margin: 1.5rem 0 0.5rem;
+            font-size: 0.85rem;
+        }
+        .feature-list li {
+            margin: 0.5rem 0;
+            list-style-type: "✓  ";
+            color: #2c5f5a;
+        }
+        footer {
+            margin-top: 1.8rem;
+            font-size: 0.7rem;
+            color: #6f8f9a;
+        }
+    </style>
+</head>
+<body>
+    <div class="glass-card">
+        <div class="badge">✨ Live Editor Ready</div>
+        <h1>Chào mừng đến với<br>Code Viewer</h1>
+        <p>👩‍💻 Bạn có thể dán bất kỳ mã HTML/CSS/JS nào vào khung bên trái.<br>Nhấn <strong>Run & Preview</strong> để xem kết quả ngay lập tức.</p>
+        <button onclick="alert('🎉 Tương tác thành công! Bạn có thể build bất cứ giao diện nào.')">Thử tương tác</button>
+        <div class="feature-list">
+            <li>Hỗ trợ đầy đủ HTML5, CSS3, JavaScript</li>
+            <li>Chạy an toàn, hiển thị y hệt trình duyệt</li>
+            <li>Lưu lại code sau mỗi lần Run (LocalStorage)</li>
+        </div>
+        <footer>💡 Hãy sửa code bên trái & nhấn Run — preview cập nhật tức thì</footer>
+    </div>
+</body>
+</html>`;
 
-// ── Perf warning ──────────────────────────────────────────────────────────
-function updatePerfWarn() {
-  const cf  = document.getElementById('opt_controlFlow').checked;
-  const cfT = parseFloat(document.getElementById('opt_cfThreshold').value);
-  const dc  = document.getElementById('opt_deadCode').checked;
-  const dbg = document.getElementById('opt_debugProtection').checked;
-  const dbgInt = parseInt(document.getElementById('opt_dbgInterval').value);
-  const warns = [];
-  if (cf && cfT > 0.4) warns.push(`Control Flow threshold ${cfT.toFixed(1)} cao — giảm xuống ≤ 0.4`);
-  if (dc) warns.push('Dead Code Injection làm tăng kích thước file đáng kể');
-  if (dbg && dbgInt > 0) warns.push(`Debug Protection interval ${dbgInt}ms chạy nền liên tục`);
-  const el = document.getElementById('perfWarn');
-  if (warns.length) {
-    el.classList.add('show');
-    document.getElementById('perfWarnText').innerHTML = '<b>Cảnh báo hiệu năng:</b> ' + warns.join(' · ');
-  } else {
-    el.classList.remove('show');
-  }
-}
+        // --- Lưu code vào localStorage & tạo preview ---
+        function saveCodeToLocal(code) {
+            try {
+                localStorage.setItem('live_code_preview', code);
+            } catch(e) { console.warn(e); }
+        }
 
-// ── Stats ─────────────────────────────────────────────────────────────────
-function formatBytes(b) {
-  if (!b) return '0B';
-  return b < 1024 ? b + 'B' : (b/1024).toFixed(1) + 'K';
-}
-function updateStats() {
-  document.getElementById('inputSize').textContent  = formatBytes(new Blob([document.getElementById('inputCode').value]).size);
-  document.getElementById('outputSize').textContent = formatBytes(new Blob([document.getElementById('outputCode').value]).size);
-}
+        function loadCodeFromLocal() {
+            const saved = localStorage.getItem('live_code_preview');
+            if (saved !== null && saved.trim() !== "") {
+                return saved;
+            }
+            return DEFAULT_CODE;
+        }
 
-// ── Presets ───────────────────────────────────────────────────────────────
-const PRESETS = {
-  low:    { compact:true, rename:'hexadecimal', sa:true, shuffle:false, enc:'none',   cf:false, cfT:0.3, dc:false, dcT:0.2, self:false, dbg:false, dbgInt:0, con:false, uni:false, split:false, num:false, label:'CB'  },
-  medium: { compact:true, rename:'hexadecimal', sa:true, shuffle:true,  enc:'base64', cf:false, cfT:0.3, dc:false, dcT:0.2, self:false, dbg:false, dbgInt:0, con:false, uni:false, split:false, num:false, label:'TB'  },
-  high:   { compact:true, rename:'hexadecimal', sa:true, shuffle:true,  enc:'rc4',   cf:true,  cfT:0.3, dc:false, dcT:0.2, self:true,  dbg:true,  dbgInt:0, con:false, uni:true,  split:true,  num:true,  label:'Cao' },
-  max:    { compact:true, rename:'mangled-shuffled', sa:true, shuffle:true, enc:'rc4', cf:true, cfT:0.4, dc:true,  dcT:0.2, self:true,  dbg:true,  dbgInt:0, con:true,  uni:true,  split:true,  num:true,  label:'Max' }
-};
-
-function applyPreset(level, btn) {
-  document.querySelectorAll('.pill').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-  const p = PRESETS[level];
-  document.getElementById('protection').textContent = p.label;
-  const s = (id, v, isSelect) => { const el = document.getElementById(id); isSelect ? el.value = v : el.checked = v; };
-  s('opt_compact', p.compact); s('opt_rename', p.rename, true);
-  s('opt_stringArray', p.sa); s('opt_shuffleStringArray', p.shuffle);
-  s('opt_stringEncoding', p.enc, true);
-  s('opt_controlFlow', p.cf);
-  document.getElementById('opt_cfThreshold').value = p.cfT;
-  document.getElementById('cfVal').textContent = p.cfT.toFixed(1);
-  document.getElementById('cfSliderRow').style.display = p.cf ? 'block' : 'none';
-  s('opt_deadCode', p.dc);
-  document.getElementById('opt_dcThreshold').value = p.dcT;
-  document.getElementById('dcVal').textContent = p.dcT.toFixed(1);
-  document.getElementById('dcSliderRow').style.display = p.dc ? 'block' : 'none';
-  s('opt_selfDefending', p.self); s('opt_debugProtection', p.dbg);
-  document.getElementById('opt_dbgInterval').value = p.dbgInt;
-  document.getElementById('dbgVal').textContent = p.dbgInt + ' ms';
-  document.getElementById('dbgIntervalRow').style.display = p.dbg ? 'block' : 'none';
-  s('opt_disableConsole', p.con); s('opt_unicode', p.uni);
-  s('opt_splitStrings', p.split); s('opt_numbers', p.num);
-  updatePerfWarn();
-}
-
-// ── Obfuscate ─────────────────────────────────────────────────────────────
-function obfuscate() {
-  if (typeof JavaScriptObfuscator === 'undefined') { toast('Thư viện chưa tải. Tải lại trang!', 'err'); return; }
-  const code = document.getElementById('inputCode').value.trim();
-  if (!code) { toast('Hãy nhập JavaScript!', 'err'); return; }
-  setLoading(true);
-  setTimeout(() => {
-    try {
-      const enc    = document.getElementById('opt_stringEncoding').value;
-      const cfT    = parseFloat(document.getElementById('opt_cfThreshold').value);
-      const dcT    = parseFloat(document.getElementById('opt_dcThreshold').value);
-      const dbgInt = parseInt(document.getElementById('opt_dbgInterval').value);
-      const result = JavaScriptObfuscator.obfuscate(code, {
-        compact:                        document.getElementById('opt_compact').checked,
-        identifierNamesGenerator:       document.getElementById('opt_rename').value,
-        stringArray:                    document.getElementById('opt_stringArray').checked,
-        rotateStringArray:              document.getElementById('opt_stringArray').checked,
-        shuffleStringArray:             document.getElementById('opt_shuffleStringArray').checked,
-        stringArrayEncoding:            enc === 'none' ? [] : [enc],
-        selfDefending:                  document.getElementById('opt_selfDefending').checked,
-        controlFlowFlattening:          document.getElementById('opt_controlFlow').checked,
-        controlFlowFlatteningThreshold: cfT,
-        deadCodeInjection:              document.getElementById('opt_deadCode').checked,
-        deadCodeInjectionThreshold:     dcT,
-        debugProtection:                document.getElementById('opt_debugProtection').checked,
-        debugProtectionInterval:        dbgInt,
-        disableConsoleOutput:           document.getElementById('opt_disableConsole').checked,
-        unicodeEscapeSequence:          document.getElementById('opt_unicode').checked,
-        numbersToExpressions:           document.getElementById('opt_numbers').checked,
-        splitStrings:                   document.getElementById('opt_splitStrings').checked,
-        splitStringsChunkLength:        5,
-        target: 'browser'
-      });
-      document.getElementById('outputCode').value = result.getObfuscatedCode();
-      updateStats(); setLoading(false);
-      toast('Mã hoá thành công!', 'ok');
-    } catch (e) {
-      setLoading(false);
-      toast('Lỗi: ' + e.message, 'err');
-    }
-  }, 50);
-}
-
-function setLoading(on) {
-  document.getElementById('spinner').classList.toggle('show', on);
-  document.getElementById('btnText').textContent = on ? 'Đang mã hoá...' : 'Mã Hoá JavaScript';
-  document.getElementById('encryptBtn').disabled = on;
-}
-
-// ── Helpers ───────────────────────────────────────────────────────────────
-function loadFile(e) {
-  const file = e.target.files[0]; if (!file) return;
-  new FileReader().onload = ev => { document.getElementById('inputCode').value = ev.target.result; updateStats(); toast('Đã tải: ' + file.name, 'ok'); };
-  (new FileReader()).readAsText(file);
-  // re-read properly:
-  const r = new FileReader();
-  r.onload = ev => { document.getElementById('inputCode').value = ev.target.result; updateStats(); toast('Đã tải: ' + file.name, 'ok'); };
-  r.readAsText(file);
-}
-
-function clearAll() {
-  document.getElementById('inputCode').value = '';
-  document.getElementById('outputCode').value = '';
-  updateStats();
-}
-
-function copyOutput() {
-  const out = document.getElementById('outputCode').value;
-  if (!out) { toast('Chưa có kết quả!', 'err'); return; }
-  navigator.clipboard.writeText(out).then(() => toast('Đã copy vào clipboard!', 'ok'));
-}
-
-function downloadOutput() {
-  const out = document.getElementById('outputCode').value;
-  if (!out) { toast('Chưa có kết quả!', 'err'); return; }
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(new Blob([out], { type:'text/javascript' }));
-  a.download = 'obfuscated.js'; a.click();
-  toast('Đang tải về...', 'ok');
-}
-
-function sendToGitHub() {
-  const out = document.getElementById('outputCode').value;
-  if (!out) { toast('Hãy mã hoá code trước!', 'err'); return; }
-  document.getElementById('ghContent').value = out;
-  document.querySelectorAll('.tab')[2].click();
-  toast('Đã chuyển sang GitHub', 'info');
-}
-
-function loadFromObfuscator() {
-  const out = document.getElementById('outputCode').value;
-  if (!out) { toast('Chưa có code mã hoá!', 'err'); return; }
-  document.getElementById('ghContent').value = out;
-  toast('Đã tải!', 'ok');
-}
-
-// ── GitHub ────────────────────────────────────────────────────────────────
-const ghH = t => ({ 'Authorization':'Bearer '+t, 'Accept':'application/vnd.github+json', 'Content-Type':'application/json', 'X-GitHub-Api-Version':'2022-11-28' });
-
-function addLog(msg, type) {
-  const log = document.getElementById('statusLog');
-  if (log.textContent === 'Sẵn sàng...') log.innerHTML = '';
-  const line = document.createElement('div');
-  line.className = type ? 'log-'+type : '';
-  line.textContent = '['+new Date().toLocaleTimeString('vi-VN')+'] '+msg;
-  log.appendChild(line); log.scrollTop = log.scrollHeight;
-}
-function clearLog() { document.getElementById('statusLog').innerHTML = ''; }
-
-async function checkRepo() {
-  const token = document.getElementById('ghToken').value.trim();
-  const owner = document.getElementById('ghOwner').value.trim();
-  const repo  = document.getElementById('ghRepo').value.trim();
-  if (!token||!owner||!repo) { toast('Điền Token, Owner, Repo!','err'); return; }
-  addLog('Đang kết nối...','info');
-  try {
-    const res = await fetch(`https://api.github.com/repos/${owner}/${repo}`,{headers:ghH(token)});
-    if (res.ok) { const d=await res.json(); addLog(`Kết nối thành công: ${d.full_name} — branch: ${d.default_branch}`,'ok'); toast('Kết nối thành công!','ok'); }
-    else { const e=await res.json(); addLog('Lỗi: '+e.message,'err'); toast('Lỗi: '+e.message,'err'); }
-  } catch(e) { addLog('Lỗi mạng: '+e.message,'err'); }
-}
-
-async function uploadToGitHub() {
-  const token   = document.getElementById('ghToken').value.trim();
-  const owner   = document.getElementById('ghOwner').value.trim();
-  const repo    = document.getElementById('ghRepo').value.trim();
-  const branch  = document.getElementById('ghBranch').value.trim()||'main';
-  const path    = document.getElementById('ghPath').value.trim();
-  const message = document.getElementById('ghMessage').value.trim()||'Update via JSCipher';
-  const content = document.getElementById('ghContent').value;
-  if (!token||!owner||!repo||!path) { toast('Điền đủ thông tin!','err'); return; }
-  if (!content) { toast('Chưa có nội dung file!','err'); return; }
-
-  document.getElementById('uploadSpinner').classList.add('show');
-  document.getElementById('uploadBtnText').textContent = 'Đang upload...';
-  document.getElementById('uploadBtn').disabled = true;
-  clearLog(); addLog('Bắt đầu upload...','info');
-
-  const encoded = btoa(unescape(encodeURIComponent(content)));
-  let sha = null;
-  try {
-    const check = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${path}?ref=${branch}`,{headers:ghH(token)});
-    if (check.ok) { sha=(await check.json()).sha; addLog('File đã tồn tại — sẽ cập nhật','warn'); }
-    else addLog('File chưa tồn tại — sẽ tạo mới','info');
-  } catch(_) {}
-
-  const body = {message, content:encoded, branch}; if (sha) body.sha=sha;
-  try {
-    const res = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${path}`,{method:'PUT',headers:ghH(token),body:JSON.stringify(body)});
-    if (res.ok) { const d=await res.json(); addLog('Upload thành công!','ok'); addLog(d.content.html_url,'ok'); toast('Upload thành công!','ok'); }
-    else { const e=await res.json(); addLog('Lỗi: '+e.message,'err'); toast('Lỗi: '+e.message,'err'); }
-  } catch(e) { addLog('Lỗi mạng: '+e.message,'err'); toast('Lỗi kết nối!','err'); }
-
-  document.getElementById('uploadSpinner').classList.remove('show');
-  document.getElementById('uploadBtnText').textContent = 'Upload lên GitHub';
-  document.getElementById('uploadBtn').disabled = false;
-}
-
-// ── Toast ─────────────────────────────────────────────────────────────────
-const ICONS = {
-  ok:   '<polyline points="20 6 9 17 4 12"/>',
-  err:  '<circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>',
-  info: '<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>'
-};
-let toastTimer;
-function toast(msg, type='info') {
-  const el = document.getElementById('toast');
-  document.getElementById('toastIcon').innerHTML = ICONS[type] || ICONS.info;
-  document.getElementById('toastMsg').textContent = msg;
-  el.className = 'toast '+type+' show';
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => el.classList.remove('show'), 2800);
-}
-
-// Fix duplicate FileReader in loadFile
-function loadFile(e) {
-  const file = e.target.files[0]; if (!file) return;
-  const r = new FileReader();
-  r.onload = ev => { document.getElementById('inputCode').value = ev.target.result; updateStats(); toast('Đã tải: ' + file.name, 'ok'); };
-  r.readAsText(file);
-}
+        // Hàm cập nhật preview (tạo blob URL và gán cho iframe)
+        function updatePreview() {
+            let code = editor.value;
+            
+            // Nếu code rỗng, hiển thị thông báo nhẹ nhàng (nhưng vẫn tạo trang trống)
+            if (!code || code.trim() === "") {
+                code = `<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"><title>Trống</title><style>body{font-family:sans-serif;display:flex;justify-content:center;align-items:center;height:100vh;background:#f1f5f9;color:#475569;}</style></head>
+<body><div style="text-align:center"><h3>📭 Không có mã nguồn</h3><p>Hãy dán mã HTML/CSS/JS vào khung bên trái và nhấn "Run".</p></div></body>
+</html>`;
+            }
+            
+            // Lưu vào localStorage (chỉ lưu nội dung thực tế - kể cả rỗng thì lưu rỗng)
+            saveCodeToLocal(editor.value);
+            
+            // Revoke blob URL cũ nếu có
+            if (currentBlobUrl) {
+                URL.revokeObjectURL(currentBlobUrl);
+                currentBlobUrl = null;
+            }
+            
+            // Tạo blob mới với nội dung HTML
+            const blob = new Blob([code], { type: 'text/html' });
+            const blobUrl = URL.createObjectURL(blob);
+            currentBlobUrl = blobUrl;
+            
+            // Cập nhật iframe
+            iframe.src = blobUrl;
+        }
+        
+        // Khôi phục code từ localStorage hoặc mặc định, hiển thị lên editor và preview
+        function loadInitialCode() {
+            const storedCode = loadCodeFromLocal();
+            editor.value = storedCode;
+            // Cập nhật preview ngay khi tải trang
+            updatePreview();
+        }
+        
+        // --- Reset về code mẫu ---
+        function resetToDefault() {
+            editor.value = DEFAULT_CODE;
+            saveCodeToLocal(DEFAULT_CODE);
+            updatePreview();
+        }
+        
+        // --- Xóa toàn bộ code (clear editor) ---
+        function clearEditor() {
+            editor.value = "";
+            saveCodeToLocal("");   // lưu trống
+            updatePreview();       // preview sẽ hiển thị thông báo trống
+        }
+        
+        // --- Thêm sự kiện cho các nút ---
+        runBtn.addEventListener('click', () => {
+            updatePreview();
+        });
+        
+        resetBtn.addEventListener('click', () => {
+            resetToDefault();
+        });
+        
+        clearBtn.addEventListener('click', () => {
+            clearEditor();
+        });
+        
+        // Phím tắt Ctrl+Enter (hoặc Cmd+Enter) để chạy preview
+        function handleShortcut(e) {
+            // Kiểm tra Ctrl (Windows/Linux) hoặc Meta (Mac)
+            if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                e.preventDefault();
+                updatePreview();
+                // Hiệu ứng nhấp nháy nhẹ (optional)
+                runBtn.style.transform = 'scale(0.97)';
+                setTimeout(() => { runBtn.style.transform = ''; }, 120);
+            }
+        }
+        
+        document.addEventListener('keydown', handleShortcut);
+        
+        // Tự động lưu code khi nhấn Run (đã có trong updatePreview), ngoài ra
+        // có thể lưu khi blur khỏi textarea? KHÔNG cần, nhưng để tránh mất dữ liệu khi tải lại,
+        // nếu người dùng chỉ sửa code và thoát trang mà không nhấn run, vẫn có thể mất.
+        // Giải pháp: tự động lưu code khi người dùng dừng gõ (debounce) để trải nghiệm mượt.
+        // Thêm tính năng auto-save draft (lưu vào local mỗi khi thay đổi)
+        let autoSaveTimer;
+        editor.addEventListener('input', function() {
+            clearTimeout(autoSaveTimer);
+            autoSaveTimer = setTimeout(() => {
+                const currentCode = editor.value;
+                saveCodeToLocal(currentCode);
+            }, 600);
+        });
+        
+        // Khi khởi tạo nếu có lỗi iframe do sandbox? Không sao, vẫn hoạt động tốt.
+        // Ngoài ra thêm fallback cho iframe khi không load (hiếm)
+        iframe.addEventListener('error', () => {
+            console.log("Iframe load error, retry?");
+        });
+        
+        // Bắt đầu mọi thứ
+        loadInitialCode();
+        
+        // Xử lý khi resize window đảm bảo iframe không bị méo
+        window.addEventListener('resize', () => {
+            // Đơn giản là trigger lại không cần thiết, nhưng giữ ổn định layout
+            if (iframe && iframe.style) {
+                // chỉ để đồng bộ, không ảnh hưởng nội dung
+            }
+        });
+        
+        // thông báo cho người dùng nếu dán code dài quá
+        console.log("Ready: Bạn có thể dán code HTML bất kỳ và xem kết quả trực tiếp.");
+    })();
 </script>
 </body>
 </html>
