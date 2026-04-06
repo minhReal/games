@@ -1,566 +1,1800 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>Live Code Viewer - Dán code & xem index ngay</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>JSCipher</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/javascript-obfuscator@4.0.0/dist/index.browser.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{
+  --bg:#0f1117;--surface:#1a1d27;--surface2:#1f2335;--border:#252838;
+  --accent:#6c63ff;--accent-dim:rgba(108,99,255,.14);--accent-hover:#7c75ff;
+  --green:#22c55e;--red:#ef4444;--yellow:#f59e0b;--orange:#f97316;--blue:#38bdf8;
+  --text:#e2e4f0;--muted:#6b7280;--muted2:#4b5263;
+  --mono:'JetBrains Mono',monospace;--sans:'Inter',sans-serif;
+  --radius:10px;--radius-sm:7px;--radius-xs:5px;
+}
+html,body{height:100%}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
+.app{display:flex;flex-direction:column;min-height:100vh}
 
-        body {
-            font-family: 'Segoe UI', 'Inter', system-ui, -apple-system, 'Roboto', sans-serif;
-            background: #f1f5f9;
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-        }
+/* SVG icon baseline */
+svg.ic{display:inline-block;vertical-align:middle;width:15px;height:15px;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;fill:none;flex-shrink:0}
+svg.ic-sm{width:12px;height:12px}
+svg.ic-lg{width:17px;height:17px}
+svg.ic-xl{width:20px;height:20px}
 
-        /* HEADER + thanh công cụ */
-        .toolbar-header {
-            background: white;
-            border-bottom: 1px solid #e2e8f0;
-            padding: 0.75rem 1.5rem;
-            display: flex;
-            flex-wrap: wrap;
-            align-items: center;
-            justify-content: space-between;
-            gap: 1rem;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-            z-index: 10;
-        }
+/* ── Header ── */
+.header{display:flex;align-items:center;justify-content:space-between;padding:13px 16px;border-bottom:1px solid var(--border);background:var(--surface);position:sticky;top:0;z-index:60}
+.brand{display:flex;align-items:center;gap:10px}
+.brand-icon{width:32px;height:32px;background:var(--accent);border-radius:8px;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:13px;color:#fff;font-weight:500;flex-shrink:0}
+.brand-name{font-size:16px;font-weight:600;letter-spacing:-.3px}
+.brand-sub{font-size:11px;color:var(--muted);margin-top:1px}
+.header-right{display:flex;align-items:center;gap:8px}
+.lib-dot{width:7px;height:7px;border-radius:50%;background:var(--yellow);flex-shrink:0;transition:background .3s}
+.lib-dot.ok{background:var(--green)}
+.lib-dot.err{background:var(--red)}
+.lib-label{font-size:11px;color:var(--muted)}
 
-        .logo-area h1 {
-            font-size: 1.35rem;
-            font-weight: 600;
-            background: linear-gradient(135deg, #0f2b3d, #1e6f5c);
-            background-clip: text;
-            -webkit-background-clip: text;
-            color: transparent;
-            letter-spacing: -0.2px;
-        }
-        .logo-area p {
-            font-size: 0.75rem;
-            color: #475569;
-            margin-top: 2px;
-        }
+/* ── Settings modal ── */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:100;align-items:flex-end;justify-content:center}
+.modal-overlay.open{display:flex}
+@media(min-width:600px){.modal-overlay{align-items:center}}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:16px 16px 0 0;width:100%;max-width:480px;max-height:90vh;overflow-y:auto;padding:0 0 20px}
+@media(min-width:600px){.modal{border-radius:16px}}
+.modal-header{display:flex;align-items:center;justify-content:space-between;padding:16px 16px 12px;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--surface);z-index:1}
+.modal-title{font-size:14px;font-weight:600}
+.modal-section{padding:14px 16px 0}
+.modal-section-title{font-size:11px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);margin-bottom:10px}
+.lang-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.lang-btn{display:flex;align-items:center;gap:8px;padding:10px 12px;border-radius:var(--radius-sm);border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;font-family:var(--sans);font-size:13px;font-weight:500;transition:all .15s}
+.lang-btn:hover{border-color:#444;color:var(--text)}
+.lang-btn.active{border-color:var(--accent);background:var(--accent-dim);color:var(--accent)}
+.lang-flag{font-size:18px;line-height:1}
+.theme-row{display:flex;gap:8px;flex-wrap:wrap}
 
-        .button-group {
-            display: flex;
-            gap: 0.75rem;
-            flex-wrap: wrap;
-        }
+/* ── Tabs ── */
+.tabs{display:flex;background:var(--surface);border-bottom:1px solid var(--border);padding:0 12px;overflow-x:auto;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tab{display:inline-flex;align-items:center;gap:6px;padding:11px 14px;font-size:13px;font-weight:500;color:var(--muted);cursor:pointer;border:none;background:none;white-space:nowrap;border-bottom:2px solid transparent;transition:all .15s;font-family:var(--sans)}
+.tab svg{width:14px;height:14px;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;fill:none}
+.tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+.tab:hover:not(.active){color:var(--text)}
 
-        .btn {
-            border: none;
-            padding: 0.5rem 1.2rem;
-            font-weight: 500;
-            font-size: 0.85rem;
-            border-radius: 40px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            background-color: #f1f5f9;
-            color: #1e293b;
-            box-shadow: 0 1px 1px rgba(0,0,0,0.05);
-        }
+/* ── Content ── */
+.content{flex:1;padding:14px;max-width:820px;margin:0 auto;width:100%}
+.page{display:none;flex-direction:column;gap:11px}
+.page.active{display:flex}
 
-        .btn-primary {
-            background: #0f2b3d;
-            color: white;
-            box-shadow: 0 2px 5px rgba(15,43,61,0.2);
-        }
-        .btn-primary:hover {
-            background: #1a4b5e;
-            transform: translateY(-1px);
-        }
+/* ── Card ── */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
+.card-header{display:flex;align-items:center;justify-content:space-between;padding:11px 14px;border-bottom:1px solid var(--border);gap:8px}
+.card-title{font-size:11px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;color:var(--muted)}
+.card-actions{display:flex;gap:6px;flex-shrink:0}
 
-        .btn-secondary {
-            background: #e2e8f0;
-            color: #0f172a;
-        }
-        .btn-secondary:hover {
-            background: #cbd5e1;
-        }
+/* ── Textarea ── */
+textarea{width:100%;background:transparent;border:none;color:var(--text);font-family:var(--mono);font-size:12.5px;line-height:1.65;padding:13px;resize:none;outline:none;min-height:190px}
+textarea::placeholder{color:var(--muted2)}
+#outputCode{color:#7dd3fc;min-height:160px}
 
-        .btn-outline {
-            background: transparent;
-            border: 1px solid #cbd5e1;
-        }
-        .btn-outline:hover {
-            background: #f8fafc;
-            border-color: #94a3b8;
-        }
+/* ── Buttons ── */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:7px 12px;font-size:12px;font-weight:500;font-family:var(--sans);border-radius:var(--radius-sm);border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;transition:all .15s;white-space:nowrap;line-height:1}
+.btn svg{width:13px;height:13px;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;fill:none;flex-shrink:0}
+.btn:hover{color:var(--text);border-color:#3a3d50}
+.btn:active{transform:scale(.97)}
+.btn-icon{padding:7px 9px}
+.btn-primary{background:var(--accent);border-color:var(--accent);color:#fff;font-size:14px;padding:13px 20px;width:100%;justify-content:center;border-radius:var(--radius);font-weight:600}
+.btn-primary svg.ic-lg{width:16px;height:16px}
+.btn-primary:hover{background:var(--accent-hover);border-color:var(--accent-hover);color:#fff}
+.btn-primary:disabled{opacity:.45;cursor:not-allowed}
+.btn-danger{border-color:rgba(239,68,68,.3);color:var(--red)}
+.btn-danger:hover{background:rgba(239,68,68,.08);border-color:var(--red);color:var(--red)}
 
-        /* shortcut hint */
-        .shortcut-hint {
-            font-size: 0.7rem;
-            background: #eef2ff;
-            padding: 0.25rem 0.75rem;
-            border-radius: 30px;
-            color: #1e40af;
-            font-family: monospace;
-        }
+/* ── Stats ── */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.stat{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:11px 10px;text-align:center}
+.stat-val{font-family:var(--mono);font-size:16px;font-weight:500;color:var(--accent)}
+.stat-label{font-size:10px;color:var(--muted);margin-top:2px}
 
-        /* MAIN LAYOUT (2 cột) */
-        .main-container {
-            display: flex;
-            flex: 1;
-            gap: 0;
-            overflow: hidden;
-            padding: 0.75rem 1rem 1rem 1rem;
-            background: #e9eef3;
-        }
+/* ── Presets ── */
+.presets{display:flex;gap:6px;flex-wrap:wrap;padding:11px 14px;border-bottom:1px solid var(--border)}
+.pill{padding:5px 13px;font-size:12px;font-weight:500;border-radius:20px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;transition:all .15s;font-family:var(--sans)}
+.pill.active,.pill:hover{background:var(--accent-dim);border-color:var(--accent);color:var(--accent)}
 
-        /* Panel soạn thảo */
-        .editor-panel {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            background: #ffffff;
-            border-radius: 20px;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.05);
-            margin-right: 0.75rem;
-            overflow: hidden;
-            border: 1px solid #e2e8f0;
-        }
+/* ── Section label ── */
+.section-label{display:flex;align-items:center;gap:8px;font-size:11px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);padding:11px 14px 6px}
 
-        .panel-header {
-            background: #fefefe;
-            padding: 0.75rem 1.2rem;
-            border-bottom: 1px solid #e9edf2;
-            font-weight: 600;
-            font-size: 0.85rem;
-            color: #0f2b3d;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            letter-spacing: 0.3px;
-        }
+/* ── Tags ── */
+.tag{display:inline-flex;align-items:center;gap:3px;padding:2px 6px;border-radius:4px;font-size:10px;font-weight:600;vertical-align:middle}
+.tag svg{width:10px;height:10px;stroke:currentColor;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round;fill:none}
+.tag-slow{background:rgba(249,115,22,.1);color:var(--orange);border:1px solid rgba(249,115,22,.22)}
+.tag-safe{background:rgba(34,197,94,.08);color:var(--green);border:1px solid rgba(34,197,94,.18)}
+.tag-new{background:rgba(56,189,248,.1);color:var(--blue);border:1px solid rgba(56,189,248,.22)}
+.tag-hard{background:rgba(108,99,255,.12);color:var(--accent);border:1px solid rgba(108,99,255,.25)}
 
-        .panel-header span {
-            background: #eef2ff;
-            padding: 0.2rem 0.6rem;
-            border-radius: 30px;
-            font-family: monospace;
-            font-size: 0.7rem;
-        }
+/* ── Opt row ── */
+.opt{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;gap:12px}
+.opt+.opt{border-top:1px solid var(--border)}
+.opt-info{flex:1;min-width:0}
+.opt-name{font-size:13px;font-weight:500;display:flex;align-items:center;gap:6px;flex-wrap:wrap;line-height:1.4}
+.opt-desc{font-size:11px;color:var(--muted);margin-top:2px;line-height:1.5}
+.opt-right{display:flex;align-items:center;gap:8px;flex-shrink:0}
 
-        textarea {
-            flex: 1;
-            width: 100%;
-            padding: 1.2rem;
-            font-family: 'Fira Code', 'Cascadia Code', 'JetBrains Mono', monospace;
-            font-size: 0.85rem;
-            line-height: 1.5;
-            border: none;
-            resize: none;
-            background: #fefcf5;
-            color: #0a0c10;
-            outline: none;
-            tab-size: 4;
-        }
+/* ── Toggle ── */
+.toggle{position:relative;width:40px;height:22px;flex-shrink:0;cursor:pointer}
+.toggle input{opacity:0;width:0;height:0;position:absolute}
+.toggle-track{position:absolute;inset:0;background:var(--border);border-radius:22px;transition:background .2s}
+.toggle-thumb{position:absolute;width:16px;height:16px;background:#555;border-radius:50%;top:3px;left:3px;transition:all .2s;pointer-events:none}
+.toggle input:checked~.toggle-track{background:var(--accent)}
+.toggle input:checked~.toggle-thumb{left:21px;background:#fff}
 
-        textarea:focus {
-            background: #ffffff;
-        }
+/* ── Select ── */
+.opt-select{background:var(--bg);border:1px solid var(--border);color:var(--text);padding:5px 8px;font-size:12px;font-family:var(--mono);border-radius:var(--radius-sm);outline:none;cursor:pointer;transition:border-color .15s}
+.opt-select:focus{border-color:var(--accent)}
 
-        /* Panel preview */
-        .preview-panel {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            background: white;
-            border-radius: 20px;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.05);
-            margin-left: 0.75rem;
-            overflow: hidden;
-            border: 1px solid #e2e8f0;
-        }
+/* ── Text input inline ── */
+.opt-input{background:var(--bg);border:1px solid var(--border);color:var(--text);padding:5px 9px;font-size:12px;font-family:var(--mono);border-radius:var(--radius-sm);outline:none;width:130px;transition:border-color .15s}
+.opt-input:focus{border-color:var(--accent)}
+.opt-input::placeholder{color:var(--muted2)}
 
-        .preview-header {
-            background: #fefefe;
-            padding: 0.75rem 1.2rem;
-            border-bottom: 1px solid #e9edf2;
-            font-weight: 600;
-            font-size: 0.85rem;
-            color: #0f2b3d;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
+/* ── Slider ── */
+.slider-row{padding:9px 14px 12px;border-top:1px solid var(--border);background:rgba(0,0,0,.15)}
+.slider-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
+.slider-name{font-size:12px;font-weight:500;color:var(--muted)}
+.slider-val{font-family:var(--mono);font-size:12px;color:var(--accent);font-weight:500}
+.slider-desc{font-size:11px;color:var(--muted2);margin-bottom:7px;line-height:1.5}
+input[type=range]{width:100%;height:4px;border-radius:4px;outline:none;border:none;background:var(--border);cursor:pointer;-webkit-appearance:none;appearance:none}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;background:var(--accent);cursor:pointer;box-shadow:0 0 0 3px var(--accent-dim)}
+input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:var(--accent);border:none}
 
-        .badge-preview {
-            background: #dcfce7;
-            color: #15803d;
-            font-size: 0.7rem;
-            padding: 0.2rem 0.7rem;
-            border-radius: 30px;
-            font-weight: normal;
-        }
+/* ── Perf warning ── */
+.perf-warn{display:none;background:rgba(249,115,22,.06);border:1px solid rgba(249,115,22,.25);border-radius:var(--radius);padding:10px 13px;font-size:12px;color:var(--orange);line-height:1.6;align-items:flex-start;gap:9px}
+.perf-warn.show{display:flex}
+.perf-warn svg{width:15px;height:15px;stroke:var(--orange);stroke-width:2;stroke-linecap:round;stroke-linejoin:round;fill:none;flex-shrink:0;margin-top:1px}
 
-        .iframe-wrapper {
-            flex: 1;
-            background: #fff;
-            position: relative;
-        }
+/* ── Error banner ── */
+.err-banner{display:none;background:rgba(239,68,68,.07);border:1px solid var(--red);border-radius:var(--radius);padding:11px 14px;font-size:13px;color:var(--red);line-height:1.6}
+.err-banner.show{display:block}
 
-        iframe {
-            width: 100%;
-            height: 100%;
-            border: none;
-            background: white;
-        }
+/* ── Fields (GitHub) ── */
+.fields{display:flex;flex-direction:column;gap:10px;padding:14px}
+.field label{display:block;font-size:12px;font-weight:500;color:var(--muted);margin-bottom:5px}
+.field input{width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);padding:10px 12px;font-family:var(--mono);font-size:13px;border-radius:var(--radius-sm);outline:none;transition:border-color .15s;-webkit-appearance:none}
+.field input:focus{border-color:var(--accent)}
+.field input::placeholder{color:var(--muted2)}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 
-        /* responsive: mobile & tablet */
-        @media (max-width: 780px) {
-            .main-container {
-                flex-direction: column;
-                gap: 1rem;
-                padding: 0.75rem;
-            }
-            .editor-panel, .preview-panel {
-                margin: 0;
-                min-height: 45vh;
-            }
-            .editor-panel {
-                margin-bottom: 0.5rem;
-            }
-            .preview-panel {
-                margin-top: 0.5rem;
-            }
-            .toolbar-header {
-                flex-direction: column;
-                align-items: flex-start;
-            }
-            .button-group {
-                width: 100%;
-                justify-content: flex-start;
-            }
-        }
+/* ── Log ── */
+.log{font-family:var(--mono);font-size:12px;line-height:1.8;padding:12px 14px;min-height:80px;color:var(--muted);max-height:200px;overflow-y:auto}
+.log-ok{color:var(--green)}
+.log-err{color:var(--red)}
+.log-info{color:var(--accent)}
+.log-warn{color:var(--yellow)}
 
-        /* scrollbar */
-        ::-webkit-scrollbar {
-            width: 8px;
-            height: 8px;
-        }
-        ::-webkit-scrollbar-track {
-            background: #f1f1f1;
-            border-radius: 10px;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #cbd5e1;
-            border-radius: 10px;
-        }
-    </style>
+/* ── Spinner ── */
+.spinner{display:none;width:15px;height:15px;border:2px solid rgba(255,255,255,.2);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0}
+.spinner.show{display:inline-block}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ── Toast ── */
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--surface);border:1px solid var(--border);color:var(--text);padding:10px 16px;border-radius:var(--radius);font-size:13px;font-weight:500;display:flex;align-items:center;gap:8px;box-shadow:0 8px 32px rgba(0,0,0,.5);transition:transform .3s cubic-bezier(.34,1.56,.64,1),opacity .3s;opacity:0;z-index:999;max-width:calc(100vw - 32px);pointer-events:none}
+.toast svg{width:14px;height:14px;stroke:currentColor;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round;fill:none;flex-shrink:0}
+.toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+.toast.ok{border-color:var(--green);color:var(--green)}
+.toast.err{border-color:var(--red);color:var(--red)}
+.toast.info{border-color:var(--accent);color:var(--accent)}
+
+/* ── Info box ── */
+.info-box{background:rgba(108,99,255,.07);border:1px solid rgba(108,99,255,.18);border-radius:var(--radius);padding:11px 14px;font-size:13px;color:var(--muted);line-height:1.6;display:flex;gap:10px;align-items:flex-start}
+.info-box svg{width:15px;height:15px;stroke:var(--accent);stroke-width:2;stroke-linecap:round;stroke-linejoin:round;fill:none;flex-shrink:0;margin-top:2px}
+.info-box a{color:var(--accent);text-decoration:none}
+
+/* ── File btn ── */
+.file-btn{display:inline-flex;align-items:center;gap:6px;padding:7px 12px;font-size:12px;font-weight:500;font-family:var(--sans);border-radius:var(--radius-sm);border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;transition:all .15s}
+.file-btn svg{width:13px;height:13px;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;fill:none}
+.file-btn:hover{color:var(--text);border-color:#3a3d50}
+
+/* ── Divider ── */
+.divider{height:1px;background:var(--border);margin:0 14px}
+
+/* ── Textarea char counter ── */
+.textarea-footer{display:flex;justify-content:flex-end;padding:5px 14px 8px;gap:10px}
+.char-count{font-size:11px;color:var(--muted2);font-family:var(--mono)}
+
+/* ── Domain tags ── */
+.domain-list{display:flex;flex-wrap:wrap;gap:6px;padding:8px 14px 12px}
+.domain-chip{display:inline-flex;align-items:center;gap:5px;background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:3px 10px 3px 11px;font-size:12px;font-family:var(--mono);color:var(--text)}
+.domain-chip button{display:flex;align-items:center;background:none;border:none;cursor:pointer;color:var(--muted);padding:0;transition:color .15s}
+.domain-chip button:hover{color:var(--red)}
+.domain-chip button svg{width:12px;height:12px;stroke:currentColor;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round;fill:none}
+.domain-input-row{display:flex;gap:6px;padding:0 14px 10px}
+.domain-input-row input{flex:1;background:var(--bg);border:1px solid var(--border);color:var(--text);padding:7px 10px;font-family:var(--mono);font-size:12px;border-radius:var(--radius-sm);outline:none;transition:border-color .15s}
+.domain-input-row input:focus{border-color:var(--accent)}
+.domain-input-row input::placeholder{color:var(--muted2)}
+
+/* ── Reserved names ── */
+.reserved-input{width:100%;background:var(--bg);border:none;border-top:1px solid var(--border);color:var(--text);padding:10px 14px;font-family:var(--mono);font-size:12px;outline:none;min-height:56px;resize:none}
+.reserved-input::placeholder{color:var(--muted2)}
+
+/* ── Source map ── */
+.source-map-section{display:none;border-top:1px solid var(--border)}
+.source-map-section.show{display:block}
+
+/* ── Seed row ── */
+.seed-row{display:flex;align-items:center;gap:8px}
+.seed-row input{flex:1}
+.seed-row button{flex-shrink:0}
+
+/* ── Collapse group ── */
+.collapse-header{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;cursor:pointer;user-select:none;border-top:1px solid var(--border)}
+.collapse-header:first-child{border-top:none}
+.collapse-title{font-size:13px;font-weight:500;display:flex;align-items:center;gap:8px}
+.collapse-arrow{transition:transform .2s;color:var(--muted)}
+.collapse-arrow svg{width:14px;height:14px;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;fill:none}
+.collapse-body{display:none}
+.collapse-body.open{display:block}
+.collapse-header.open .collapse-arrow{transform:rotate(180deg)}
+
+/* ── URL page ── */
+.url-input-wrap{display:flex;gap:8px;padding:13px 14px;border-bottom:1px solid var(--border);align-items:center}
+.url-input-wrap input{flex:1;background:var(--bg);border:1px solid var(--border);color:var(--text);padding:10px 12px;font-family:var(--mono);font-size:13px;border-radius:var(--radius-sm);outline:none;transition:border-color .15s;-webkit-appearance:none}
+.url-input-wrap input:focus{border-color:var(--accent)}
+.url-input-wrap input::placeholder{color:var(--muted2)}
+.method-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;padding:13px 14px;border-bottom:1px solid var(--border)}
+.method-card{padding:10px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);cursor:pointer;transition:all .15s;background:transparent}
+.method-card:hover{border-color:#3a3d50;background:rgba(255,255,255,.02)}
+.method-card.active{border-color:var(--accent);background:var(--accent-dim)}
+.method-card.active .mc-name{color:var(--accent)}
+.mc-name{font-size:13px;font-weight:500;margin-bottom:3px;color:var(--text)}
+.mc-desc{font-size:11px;color:var(--muted);line-height:1.5}
+.url-output-box{font-family:var(--mono);font-size:12.5px;color:#7dd3fc;padding:13px 14px;min-height:90px;word-break:break-all;line-height:1.7;white-space:pre-wrap;background:transparent}
+.url-output-box.empty{color:var(--muted2);font-style:italic}
+.url-opts{border-top:1px solid var(--border);padding:10px 14px;display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+.url-opt-item{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--muted)}
+.url-opt-item input[type=checkbox]{width:15px;height:15px;accent-color:var(--accent);cursor:pointer}
+.url-opt-item label{cursor:pointer}
+.layers-badge{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:20px;background:rgba(108,99,255,.12);border:1px solid rgba(108,99,255,.25);font-size:11px;color:var(--accent);font-family:var(--mono);font-weight:500}
+
+@media(max-width:500px){
+  .content{padding:11px}
+  .stats{grid-template-columns:repeat(2,1fr)}
+  textarea{font-size:12px}
+  .brand-sub,.lib-label{display:none}
+  .field-row{grid-template-columns:1fr}
+  .method-grid{grid-template-columns:1fr}
+}
+</style>
 </head>
 <body>
+<div class="app">
 
-<div class="toolbar-header">
-    <div class="logo-area">
-        <h1>🧩 Live Index Viewer</h1>
-        <p>Dán mã HTML/CSS/JS → nhấn Run · Xem kết quả realtime</p>
+<!-- ── Header ─────────────────────────────────── -->
+<div class="header">
+  <div class="brand">
+    <div class="brand-icon">JS</div>
+    <div>
+      <div class="brand-name">JSCipher</div>
+      <div class="brand-sub" data-i18n="sub"></div>
     </div>
-    <div class="button-group">
-        <button class="btn btn-primary" id="runBtn">▶️ Run & Preview</button>
-        <button class="btn btn-secondary" id="resetBtn">🔄 Reset mẫu</button>
-        <button class="btn btn-outline" id="clearBtn">🗑️ Xóa code</button>
-        <div class="shortcut-hint">⌘ / Ctrl + Enter</div>
-    </div>
+  </div>
+  <div class="header-right">
+    <div class="lib-dot" id="libDot"></div>
+    <span class="lib-label" id="libLabel"></span>
+    <button class="btn btn-icon" onclick="openSettings()" title="Settings">
+      <svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07M8.46 8.46a5 5 0 0 0 0 7.07"/></svg>
+    </button>
+  </div>
 </div>
 
-<div class="main-container">
-    <!-- Editor panel -->
-    <div class="editor-panel">
-        <div class="panel-header">
-            📝 Mã nguồn (HTML / CSS / JS)
-            <span>Dán code của bạn vào đây</span>
-        </div>
-        <textarea id="codeEditor" spellcheck="false" placeholder="&lt;!DOCTYPE html&gt;
-&lt;html&gt;
-&lt;head&gt;
-    &lt;title&gt;Trang của bạn&lt;/title&gt;
-    &lt;style&gt;
-        body { font-family: system-ui; background: #f0f9ff; margin: 2rem; }
-        .card { background: white; padding: 2rem; border-radius: 24px; }
-    &lt;/style&gt;
-&lt;/head&gt;
-&lt;body&gt;
-    &lt;div class=&quot;card&quot;&gt;
-        &lt;h1&gt;Xin chào! 👋&lt;/h1&gt;
-        &lt;p&gt;Hãy dán bất kỳ code HTML nào vào khung bên trái và nhấn Run.&lt;/p&gt;
-        &lt;button onclick=&quot;alert('Bạn vừa click demo!')&quot;&gt;Thử ngay&lt;/button&gt;
-    &lt;/div&gt;
-&lt;/body&gt;
-&lt;/html&gt;"></textarea>
+<!-- ── Settings Modal ─────────────────────────── -->
+<div class="modal-overlay" id="settingsOverlay" onclick="if(event.target===this)closeSettings()">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title" data-i18n="settings"></span>
+      <button class="btn btn-icon" onclick="closeSettings()">
+        <svg class="ic" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-section">
+      <div class="modal-section-title" data-i18n="language"></div>
+      <div class="lang-grid">
+        <button class="lang-btn" id="langEN" onclick="setLang('en')">
+          <span class="lang-flag">🇬🇧</span> English
+        </button>
+        <button class="lang-btn" id="langVI" onclick="setLang('vi')">
+          <span class="lang-flag">🇻🇳</span> Tiếng Việt
+        </button>
+      </div>
+    </div>
+    <div class="modal-section" style="margin-top:14px">
+      <div class="modal-section-title" data-i18n="about"></div>
+      <p style="font-size:13px;color:var(--muted);line-height:1.7">
+        JSCipher — JavaScript Obfuscator<br>
+        <span style="color:var(--muted2);font-size:12px">javascript-obfuscator v4.0.0</span>
+      </p>
+    </div>
+  </div>
+</div>
+
+<!-- ── Tabs ───────────────────────────────────── -->
+<div class="tabs">
+  <button class="tab active" onclick="switchTab('obfuscate',this)">
+    <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+    <span data-i18n="tab_obfuscate"></span>
+  </button>
+  <button class="tab" onclick="switchTab('options',this)">
+    <svg viewBox="0 0 24 24"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg>
+    <span data-i18n="tab_options"></span>
+  </button>
+  <button class="tab" onclick="switchTab('github',this)">
+    <svg viewBox="0 0 24 24"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>
+    <span data-i18n="tab_github"></span>
+  </button>
+  <button class="tab" onclick="switchTab('url',this)">
+    <svg viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+    <span data-i18n="tab_url"></span>
+  </button>
+</div>
+
+<!-- ── Content ────────────────────────────────── -->
+<div class="content">
+
+  <div class="err-banner" id="errBanner">
+    <span data-i18n="lib_err"></span> <span id="errMsg"></span>
+  </div>
+
+  <!-- ═══ PAGE: OBFUSCATE ══════════════════════ -->
+  <div id="page-obfuscate" class="page active">
+
+    <div class="stats">
+      <div class="stat"><div class="stat-val" id="inputSize">0B</div><div class="stat-label" data-i18n="stat_input"></div></div>
+      <div class="stat"><div class="stat-val" id="outputSize">0B</div><div class="stat-label" data-i18n="stat_output"></div></div>
+      <div class="stat"><div class="stat-val" id="ratioStat">—</div><div class="stat-label" data-i18n="stat_ratio"></div></div>
+      <div class="stat"><div class="stat-val" id="protection">Med</div><div class="stat-label" data-i18n="stat_level"></div></div>
     </div>
 
-    <!-- Preview panel -->
-    <div class="preview-panel">
-        <div class="preview-header">
-            🌐 Kết quả hiển thị (Index Preview)
-            <span class="badge-preview">⚡ live render</span>
+    <!-- Input -->
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title" data-i18n="source_code"></span>
+        <div class="card-actions">
+          <label class="file-btn">
+            <svg viewBox="0 0 24 24" class="ic"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            <span data-i18n="upload"></span>
+            <input type="file" accept=".js,.ts,.txt,.mjs" style="display:none" onchange="loadFile(event)">
+          </label>
+          <button class="btn" onclick="clearAll()">
+            <svg class="ic" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+            <span data-i18n="clear"></span>
+          </button>
         </div>
-        <div class="iframe-wrapper">
-            <iframe id="previewFrame" title="live preview" sandbox="allow-same-origin allow-scripts allow-popups allow-forms allow-modals allow-downloads"></iframe>
-        </div>
+      </div>
+      <textarea id="inputCode" oninput="updateStats()" spellcheck="false" autocorrect="off" autocapitalize="off" data-i18n-placeholder="input_placeholder"></textarea>
+      <div class="textarea-footer"><span class="char-count" id="inputChars">0 chars</span></div>
     </div>
+
+    <!-- Perf warning -->
+    <div class="perf-warn" id="perfWarn">
+      <svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      <span id="perfWarnText"></span>
+    </div>
+
+    <button class="btn btn-primary" onclick="obfuscate()" id="encryptBtn">
+      <div class="spinner" id="spinner"></div>
+      <svg class="ic ic-lg" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+      <span id="btnText" data-i18n="btn_obfuscate"></span>
+    </button>
+
+    <!-- Output -->
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title" data-i18n="result"></span>
+        <div class="card-actions">
+          <button class="btn" onclick="copyOutput()">
+            <svg class="ic" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+            <span data-i18n="copy"></span>
+          </button>
+          <button class="btn" onclick="downloadOutput()">
+            <svg class="ic" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            <span data-i18n="download"></span>
+          </button>
+          <button class="btn btn-icon" onclick="sendToGitHub()" title="GitHub">
+            <svg class="ic" viewBox="0 0 24 24"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>
+          </button>
+        </div>
+      </div>
+      <textarea id="outputCode" readonly spellcheck="false" data-i18n-placeholder="output_placeholder"></textarea>
+      <div class="textarea-footer"><span class="char-count" id="outputChars">0 chars</span></div>
+    </div>
+
+  </div>
+
+  <!-- ═══ PAGE: OPTIONS ════════════════════════ -->
+  <div id="page-options" class="page">
+
+    <!-- Presets -->
+    <div class="card">
+      <div class="card-header"><span class="card-title" data-i18n="presets"></span></div>
+      <div class="presets">
+        <button class="pill" onclick="applyPreset('low',this)" data-i18n="preset_low"></button>
+        <button class="pill active" onclick="applyPreset('medium',this)" data-i18n="preset_medium"></button>
+        <button class="pill" onclick="applyPreset('high',this)" data-i18n="preset_high"></button>
+        <button class="pill" onclick="applyPreset('max',this)" data-i18n="preset_max"></button>
+      </div>
+    </div>
+
+    <!-- ── GROUP 1: Rename & Compact ── -->
+    <div class="card">
+      <div class="section-label">
+        <svg class="ic" viewBox="0 0 24 24"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+        <span data-i18n="group_rename"></span>
+        <span class="tag tag-safe"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg><span data-i18n="tag_safe"></span></span>
+      </div>
+      <div class="opt">
+        <div class="opt-info"><div class="opt-name" data-i18n="opt_compact"></div><div class="opt-desc" data-i18n="opt_compact_desc"></div></div>
+        <label class="toggle"><input type="checkbox" id="opt_compact" checked><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
+      </div>
+      <div class="opt">
+        <div class="opt-info"><div class="opt-name" data-i18n="opt_rename"></div><div class="opt-desc" data-i18n="opt_rename_desc"></div></div>
+        <select class="opt-select" id="opt_rename">
+          <option value="hexadecimal">Hexadecimal</option>
+          <option value="mangled">Mangled</option>
+          <option value="mangled-shuffled">Mangled Shuffled</option>
+        </select>
+      </div>
+      <div class="opt">
+        <div class="opt-info">
+          <div class="opt-name" data-i18n="opt_transform_obj"></div>
+          <div class="opt-desc" data-i18n="opt_transform_obj_desc"></div>
+        </div>
+        <label class="toggle"><input type="checkbox" id="opt_transformObj"><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
+      </div>
+      <div class="opt">
+        <div class="opt-info"><div class="opt-name" data-i18n="opt_numbers"></div><div class="opt-desc" data-i18n="opt_numbers_desc"></div></div>
+        <label class="toggle"><input type="checkbox" id="opt_numbers"><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
+      </div>
+    </div>
+
+    <!-- ── GROUP 2: String Array ── -->
+    <div class="card">
+      <div class="section-label">
+        <svg class="ic" viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+        <span data-i18n="group_string"></span>
+        <span class="tag tag-hard"><svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg><span data-i18n="tag_hard"></span></span>
+      </div>
+      <div class="opt">
+        <div class="opt-info"><div class="opt-name" data-i18n="opt_stringArray"></div><div class="opt-desc" data-i18n="opt_stringArray_desc"></div></div>
+        <label class="toggle"><input type="checkbox" id="opt_stringArray" checked><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
+      </div>
+      <div class="opt">
+        <div class="opt-info"><div class="opt-name" data-i18n="opt_encoding"></div></div>
+        <select class="opt-select" id="opt_stringEncoding">
+          <option value="base64">Base64</option>
+          <option value="rc4">RC4</option>
+          <option value="none" data-i18n-opt="none"></option>
+        </select>
+      </div>
+      <div class="opt">
+        <div class="opt-info"><div class="opt-name" data-i18n="opt_rotate"></div><div class="opt-desc" data-i18n="opt_rotate_desc"></div></div>
+        <label class="toggle"><input type="checkbox" id="opt_rotateStringArray" checked><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
+      </div>
+      <div class="opt">
+        <div class="opt-info"><div class="opt-name" data-i18n="opt_shuffle"></div><div class="opt-desc" data-i18n="opt_shuffle_desc"></div></div>
+        <label class="toggle"><input type="checkbox" id="opt_shuffleStringArray" checked><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
+      </div>
+      <div class="opt">
+        <div class="opt-info">
+          <div class="opt-name"><span data-i18n="opt_wrappers"></span><span class="tag tag-hard">NEW</span></div>
+          <div class="opt-desc" data-i18n="opt_wrappers_desc"></div>
+        </div>
+        <div class="opt-right">
+          <select class="opt-select" id="opt_wrapperType">
+            <option value="variable">Variable</option>
+            <option value="function">Function</option>
+          </select>
+          <label class="toggle"><input type="checkbox" id="opt_wrappers" onchange="toggleWrapperOpts()"><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
+        </div>
+      </div>
+      <div id="wrapperOptsRow" style="display:none">
+        <div class="slider-row" style="border-top:1px solid var(--border)">
+          <div class="slider-header"><span class="slider-name" data-i18n="opt_wrappers_count"></span><span class="slider-val" id="wrappersCountVal">2</span></div>
+          <div class="slider-desc" data-i18n="opt_wrappers_count_desc"></div>
+          <input type="range" id="opt_wrappersCount" min="1" max="20" step="1" value="2"
+            oninput="document.getElementById('wrappersCountVal').textContent=this.value">
+        </div>
+      </div>
+      <div class="opt">
+        <div class="opt-info"><div class="opt-name" data-i18n="opt_unicode"></div><div class="opt-desc" data-i18n="opt_unicode_desc"></div></div>
+        <label class="toggle"><input type="checkbox" id="opt_unicode"><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
+      </div>
+      <div class="opt">
+        <div class="opt-info"><div class="opt-name" data-i18n="opt_splitStrings"></div><div class="opt-desc" data-i18n="opt_splitStrings_desc"></div></div>
+        <div class="opt-right">
+          <select class="opt-select" id="opt_splitChunk" style="width:60px">
+            <option value="3">3</option>
+            <option value="5" selected>5</option>
+            <option value="10">10</option>
+          </select>
+          <label class="toggle"><input type="checkbox" id="opt_splitStrings"><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── GROUP 3: Flow & Injection ── -->
+    <div class="card">
+      <div class="section-label">
+        <svg class="ic" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        <span data-i18n="group_flow"></span>
+        <span class="tag tag-slow"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><span data-i18n="tag_slow"></span></span>
+      </div>
+
+      <!-- Control Flow -->
+      <div class="opt">
+        <div class="opt-info">
+          <div class="opt-name"><span data-i18n="opt_cf"></span></div>
+          <div class="opt-desc" data-i18n="opt_cf_desc"></div>
+        </div>
+        <label class="toggle"><input type="checkbox" id="opt_controlFlow" onchange="onCfChange()"><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
+      </div>
+      <div class="slider-row" id="cfSliderRow" style="display:none">
+        <div class="slider-header"><span class="slider-name">Threshold</span><span class="slider-val" id="cfVal">0.3</span></div>
+        <div class="slider-desc" data-i18n="cf_threshold_desc"></div>
+        <input type="range" id="opt_cfThreshold" min="0.1" max="1" step="0.1" value="0.3"
+          oninput="document.getElementById('cfVal').textContent=parseFloat(this.value).toFixed(1);updatePerfWarn()">
+      </div>
+
+      <!-- Dead Code -->
+      <div class="opt" style="border-top:1px solid var(--border)">
+        <div class="opt-info">
+          <div class="opt-name"><span data-i18n="opt_dead"></span></div>
+          <div class="opt-desc" data-i18n="opt_dead_desc"></div>
+        </div>
+        <label class="toggle"><input type="checkbox" id="opt_deadCode" onchange="onDcChange()"><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
+      </div>
+      <div class="slider-row" id="dcSliderRow" style="display:none">
+        <div class="slider-header"><span class="slider-name">Threshold</span><span class="slider-val" id="dcVal">0.2</span></div>
+        <div class="slider-desc" data-i18n="dc_threshold_desc"></div>
+        <input type="range" id="opt_dcThreshold" min="0.1" max="1" step="0.1" value="0.2"
+          oninput="document.getElementById('dcVal').textContent=parseFloat(this.value).toFixed(1);updatePerfWarn()">
+      </div>
+    </div>
+
+    <!-- ── GROUP 4: Protection ── -->
+    <div class="card">
+      <div class="section-label">
+        <svg class="ic" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        <span data-i18n="group_protection"></span>
+      </div>
+      <div class="opt">
+        <div class="opt-info"><div class="opt-name" data-i18n="opt_self"></div><div class="opt-desc" data-i18n="opt_self_desc"></div></div>
+        <label class="toggle"><input type="checkbox" id="opt_selfDefending"><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
+      </div>
+      <div class="opt">
+        <div class="opt-info"><div class="opt-name" data-i18n="opt_debug"></div><div class="opt-desc" data-i18n="opt_debug_desc"></div></div>
+        <label class="toggle"><input type="checkbox" id="opt_debugProtection" onchange="onDbgChange()"><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
+      </div>
+      <div class="slider-row" id="dbgIntervalRow" style="display:none">
+        <div class="slider-header"><span class="slider-name">Interval</span><span class="slider-val" id="dbgVal">0 ms</span></div>
+        <div class="slider-desc" data-i18n="debug_interval_desc"></div>
+        <input type="range" id="opt_dbgInterval" min="0" max="4000" step="500" value="0"
+          oninput="document.getElementById('dbgVal').textContent=this.value+' ms';updatePerfWarn()">
+      </div>
+      <div class="opt" style="border-top:1px solid var(--border)">
+        <div class="opt-info"><div class="opt-name" data-i18n="opt_console"></div><div class="opt-desc" data-i18n="opt_console_desc"></div></div>
+        <label class="toggle"><input type="checkbox" id="opt_disableConsole"><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
+      </div>
+    </div>
+
+    <!-- ── GROUP 5: Domain Lock ── -->
+    <div class="card">
+      <div class="section-label">
+        <svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+        <span data-i18n="group_domain"></span>
+        <span class="tag tag-new">NEW</span>
+      </div>
+      <div class="opt">
+        <div class="opt-info"><div class="opt-name" data-i18n="opt_domain_lock"></div><div class="opt-desc" data-i18n="opt_domain_lock_desc"></div></div>
+        <label class="toggle"><input type="checkbox" id="opt_domainLock" onchange="toggleDomainUI()"><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
+      </div>
+      <div id="domainUI" style="display:none;border-top:1px solid var(--border)">
+        <div class="domain-list" id="domainList"></div>
+        <div class="domain-input-row">
+          <input type="text" id="domainInput" placeholder="example.com" autocapitalize="off" autocorrect="off" onkeydown="if(event.key==='Enter')addDomain()">
+          <button class="btn" onclick="addDomain()">
+            <svg class="ic" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            <span data-i18n="add"></span>
+          </button>
+        </div>
+        <div class="opt" style="border-top:1px solid var(--border)">
+          <div class="opt-info"><div class="opt-name" data-i18n="opt_domain_redirect"></div><div class="opt-desc" data-i18n="opt_domain_redirect_desc"></div></div>
+          <input class="opt-input" id="opt_domainRedirect" placeholder="https://example.com">
+        </div>
+      </div>
+    </div>
+
+    <!-- ── GROUP 6: Reserved & Seed ── -->
+    <div class="card">
+      <div class="section-label">
+        <svg class="ic" viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+        <span data-i18n="group_advanced"></span>
+      </div>
+
+      <!-- Reserved names -->
+      <div class="opt">
+        <div class="opt-info"><div class="opt-name" data-i18n="opt_reserved"></div><div class="opt-desc" data-i18n="opt_reserved_desc"></div></div>
+      </div>
+      <textarea class="reserved-input" id="opt_reserved" rows="2" placeholder="myFunc, globalVar, ..." spellcheck="false" autocapitalize="off"></textarea>
+
+      <!-- Reserved strings -->
+      <div class="opt" style="border-top:1px solid var(--border)">
+        <div class="opt-info"><div class="opt-name" data-i18n="opt_reserved_strings"></div><div class="opt-desc" data-i18n="opt_reserved_strings_desc"></div></div>
+      </div>
+      <textarea class="reserved-input" id="opt_reservedStrings" rows="2" placeholder="secret_key, api_token, ..." spellcheck="false" autocapitalize="off"></textarea>
+
+      <!-- Seed -->
+      <div class="opt" style="border-top:1px solid var(--border)">
+        <div class="opt-info"><div class="opt-name" data-i18n="opt_seed"></div><div class="opt-desc" data-i18n="opt_seed_desc"></div></div>
+        <label class="toggle"><input type="checkbox" id="opt_useSeed" onchange="document.getElementById('seedInput').disabled=!this.checked"><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
+      </div>
+      <div class="slider-row" style="border-top:1px solid var(--border)">
+        <div class="seed-row">
+          <input class="opt-input" id="seedInput" type="number" placeholder="0" disabled style="width:100%;padding:7px 10px">
+          <button class="btn" onclick="randomSeed()">
+            <svg class="ic" viewBox="0 0 24 24"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Source Map -->
+      <div class="opt" style="border-top:1px solid var(--border)">
+        <div class="opt-info">
+          <div class="opt-name"><span data-i18n="opt_sourcemap"></span><span class="tag tag-new">NEW</span></div>
+          <div class="opt-desc" data-i18n="opt_sourcemap_desc"></div>
+        </div>
+        <label class="toggle"><input type="checkbox" id="opt_sourceMap" onchange="toggleSourceMap()"><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
+      </div>
+      <div class="source-map-section" id="sourceMapSection">
+        <div class="opt">
+          <div class="opt-info"><div class="opt-name" data-i18n="opt_sourcemap_mode"></div></div>
+          <select class="opt-select" id="opt_sourceMapMode">
+            <option value="separate">Separate</option>
+            <option value="inline">Inline</option>
+          </select>
+        </div>
+        <div class="opt" style="border-top:1px solid var(--border)">
+          <div class="opt-info"><div class="opt-name" data-i18n="opt_sourcemap_url"></div></div>
+          <input class="opt-input" id="opt_sourceMapUrl" placeholder="out.js.map">
+        </div>
+      </div>
+
+      <!-- Target -->
+      <div class="opt" style="border-top:1px solid var(--border)">
+        <div class="opt-info"><div class="opt-name" data-i18n="opt_target"></div><div class="opt-desc" data-i18n="opt_target_desc"></div></div>
+        <select class="opt-select" id="opt_target">
+          <option value="browser">Browser</option>
+          <option value="browser-no-eval">Browser (no-eval)</option>
+          <option value="node">Node.js</option>
+        </select>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ═══ PAGE: GITHUB ═════════════════════════ -->
+  <div id="page-github" class="page">
+
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title" data-i18n="gh_content"></span>
+        <button class="btn" onclick="loadFromObfuscator()">
+          <svg class="ic" viewBox="0 0 24 24"><polyline points="15 14 20 9 15 4"/><path d="M4 20v-7a4 4 0 0 1 4-4h12"/></svg>
+          <span data-i18n="gh_load"></span>
+        </button>
+      </div>
+      <textarea id="ghContent" style="color:#7dd3fc;min-height:130px" spellcheck="false" autocapitalize="off" data-i18n-placeholder="gh_content_placeholder"></textarea>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><span class="card-title" data-i18n="gh_config"></span></div>
+      <div class="fields">
+        <div class="field"><label data-i18n="gh_token"></label><input type="password" id="ghToken" placeholder="ghp_xxxxxxxxxxxxxxxx" autocomplete="off"></div>
+        <div class="field-row">
+          <div class="field"><label data-i18n="gh_owner"></label><input type="text" id="ghOwner" placeholder="username" autocomplete="off" autocapitalize="off"></div>
+          <div class="field"><label data-i18n="gh_repo"></label><input type="text" id="ghRepo" placeholder="my-repo" autocapitalize="off"></div>
+        </div>
+        <div class="field-row">
+          <div class="field"><label data-i18n="gh_branch"></label><input type="text" id="ghBranch" value="main" autocapitalize="off"></div>
+          <div class="field"><label data-i18n="gh_path"></label><input type="text" id="ghPath" placeholder="src/app.js" autocapitalize="off"></div>
+        </div>
+        <div class="field"><label data-i18n="gh_message"></label><input type="text" id="ghMessage" value="feat: add obfuscated JS via JSCipher"></div>
+        <button class="btn btn-primary" onclick="uploadToGitHub()" id="uploadBtn">
+          <div class="spinner" id="uploadSpinner"></div>
+          <svg class="ic ic-lg" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          <span id="uploadBtnText" data-i18n="gh_upload"></span>
+        </button>
+        <button class="btn" style="justify-content:center;padding:10px" onclick="checkRepo()">
+          <svg class="ic" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+          <span data-i18n="gh_check"></span>
+        </button>
+      </div>
+    </div>
+
+    <div class="info-box">
+      <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+      <span><span data-i18n="gh_info"></span> <a href="https://github.com/settings/tokens" target="_blank">github.com/settings/tokens</a></span>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title" data-i18n="log"></span>
+        <button class="btn" onclick="clearLog()">
+          <svg class="ic" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+          <span data-i18n="clear"></span>
+        </button>
+      </div>
+      <div class="log" id="statusLog"><span data-i18n="log_ready"></span></div>
+    </div>
+
+  </div>
+
+  <!-- ═══ PAGE: URL ════════════════════════════ -->
+  <div id="page-url" class="page">
+
+    <!-- Input -->
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title" data-i18n="url_input_label"></span>
+        <div class="card-actions">
+          <button class="btn btn-icon" onclick="clearUrl()" title="Clear">
+            <svg class="ic" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+          </button>
+        </div>
+      </div>
+      <div class="url-input-wrap">
+        <svg class="ic" viewBox="0 0 24 24" style="color:var(--muted)"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+        <input type="url" id="urlInput" data-i18n-placeholder="url_placeholder"
+          autocomplete="off" autocapitalize="off" autocorrect="off"
+          oninput="onUrlInput()">
+      </div>
+    </div>
+
+    <!-- Method picker -->
+    <div class="card">
+      <div class="card-header"><span class="card-title" data-i18n="url_method"></span></div>
+      <div class="method-grid">
+        <div class="method-card active" onclick="selectMethod('base64',this)">
+          <div class="mc-name">Base64</div>
+          <div class="mc-desc" data-i18n="url_m_b64"></div>
+        </div>
+        <div class="method-card" onclick="selectMethod('hex',this)">
+          <div class="mc-name">Hex Encode</div>
+          <div class="mc-desc" data-i18n="url_m_hex"></div>
+        </div>
+        <div class="method-card" onclick="selectMethod('percent',this)">
+          <div class="mc-name">Percent Encode</div>
+          <div class="mc-desc" data-i18n="url_m_pct"></div>
+        </div>
+        <div class="method-card" onclick="selectMethod('unicode',this)">
+          <div class="mc-name">Unicode (\uXXXX)</div>
+          <div class="mc-desc" data-i18n="url_m_uni"></div>
+        </div>
+        <div class="method-card" onclick="selectMethod('charcode',this)">
+          <div class="mc-name">Char Code</div>
+          <div class="mc-desc" data-i18n="url_m_chr"></div>
+        </div>
+        <div class="method-card" onclick="selectMethod('js_redirect',this)">
+          <div class="mc-name">JS Redirect</div>
+          <div class="mc-desc" data-i18n="url_m_jsr"></div>
+        </div>
+        <div class="method-card" onclick="selectMethod('html_meta',this)">
+          <div class="mc-name">HTML Meta Redirect</div>
+          <div class="mc-desc" data-i18n="url_m_html"></div>
+        </div>
+        <div class="method-card" onclick="selectMethod('multilayer',this)">
+          <div class="mc-name">Multi-layer</div>
+          <div class="mc-desc" data-i18n="url_m_multi"></div>
+        </div>
+        <div class="method-card" onclick="selectMethod('eval_b64',this)">
+          <div class="mc-name">eval(atob(...))</div>
+          <div class="mc-desc" data-i18n="url_m_eval"></div>
+        </div>
+        <div class="method-card" onclick="selectMethod('data_uri',this)">
+          <div class="mc-name">Data URI</div>
+          <div class="mc-desc" data-i18n="url_m_data"></div>
+        </div>
+      </div>
+
+      <!-- Options row -->
+      <div class="url-opts">
+        <div class="url-opt-item">
+          <input type="checkbox" id="urlOptWrap" onchange="runUrlEncode()">
+          <label for="urlOptWrap" data-i18n="url_opt_wrap"></label>
+        </div>
+        <div class="url-opt-item">
+          <input type="checkbox" id="urlOptDouble" onchange="runUrlEncode()">
+          <label for="urlOptDouble" data-i18n="url_opt_double"></label>
+        </div>
+        <div class="url-opt-item">
+          <input type="checkbox" id="urlOptNewTab" onchange="runUrlEncode()" checked>
+          <label for="urlOptNewTab" data-i18n="url_opt_newtab"></label>
+        </div>
+      </div>
+    </div>
+
+    <!-- Output -->
+    <div class="card">
+      <div class="card-header">
+        <div style="display:flex;align-items:center;gap:8px">
+          <span class="card-title" data-i18n="url_output"></span>
+          <span class="layers-badge" id="urlLayerBadge" style="display:none">
+            <svg class="ic ic-sm" viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+            <span id="urlLayerText"></span>
+          </span>
+        </div>
+        <div class="card-actions">
+          <button class="btn" onclick="copyUrl()">
+            <svg class="ic" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+            <span data-i18n="copy"></span>
+          </button>
+          <button class="btn" onclick="downloadUrl()">
+            <svg class="ic" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            <span data-i18n="download"></span>
+          </button>
+          <button class="btn btn-icon" onclick="testUrl()" title="Test / Preview">
+            <svg class="ic" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+          </button>
+        </div>
+      </div>
+      <div class="url-output-box empty" id="urlOutput" data-i18n="url_output_empty"></div>
+    </div>
+
+    <!-- Decode section -->
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title" data-i18n="url_decode_title"></span>
+      </div>
+      <div class="url-input-wrap">
+        <svg class="ic" viewBox="0 0 24 24" style="color:var(--muted)"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>
+        <input type="text" id="urlDecodeInput" data-i18n-placeholder="url_decode_placeholder"
+          autocomplete="off" autocapitalize="off" autocorrect="off"
+          oninput="runDecode()">
+      </div>
+      <div class="url-output-box" id="urlDecodeOutput" style="color:#a3e635;min-height:56px" data-i18n="url_decode_empty"></div>
+    </div>
+
+  </div>
+
+</div><!-- /content -->
+</div><!-- /app -->
+
+<!-- Toast -->
+<div class="toast" id="toast">
+  <svg id="toastIcon" class="ic" viewBox="0 0 24 24"></svg>
+  <span id="toastMsg"></span>
 </div>
 
 <script>
-    (function() {
-        // DOM elements
-        const editor = document.getElementById('codeEditor');
-        const iframe = document.getElementById('previewFrame');
-        const runBtn = document.getElementById('runBtn');
-        const resetBtn = document.getElementById('resetBtn');
-        const clearBtn = document.getElementById('clearBtn');
+// ══════════════════════════════════════════════════════════
+//  i18n
+// ══════════════════════════════════════════════════════════
+const STRINGS = {
+  en: {
+    sub:'Advanced JavaScript Obfuscator',
+    settings:'Settings', language:'Language', about:'About',
+    tab_obfuscate:'Obfuscate', tab_options:'Options', tab_github:'GitHub',
+    lib_ready:'Ready', lib_loading:'Loading...', lib_err:'Library failed to load.',
+    stat_input:'Input', stat_output:'Output', stat_ratio:'Ratio', stat_level:'Level',
+    source_code:'Source Code', result:'Result',
+    upload:'Upload', clear:'Clear', copy:'Copy', download:'Download', add:'Add',
+    input_placeholder:'// Paste your JavaScript here...',
+    output_placeholder:'// Obfuscated result appears here...',
+    btn_obfuscate:'Obfuscate JavaScript', btn_obfuscating:'Obfuscating...',
+    presets:'Quick Presets',
+    preset_low:'Basic', preset_medium:'Medium', preset_high:'High', preset_max:'Maximum',
+    // groups
+    group_rename:'Rename & Compact', group_string:'String Array & Encoding',
+    group_flow:'Control Flow & Injection', group_protection:'Runtime Protection',
+    group_domain:'Domain Lock', group_advanced:'Advanced Options',
+    // tags
+    tag_safe:'No lag', tag_slow:'May lag', tag_hard:'Hard to reverse',
+    // options
+    opt_compact:'Compact', opt_compact_desc:'Compress output into one line',
+    opt_rename:'Rename Identifiers', opt_rename_desc:'Rename variables, functions and arguments',
+    opt_transform_obj:'Transform Object Keys', opt_transform_obj_desc:'Obfuscate object property names',
+    opt_numbers:'Numbers to Expressions', opt_numbers_desc:'Convert numbers into arithmetic expressions',
+    opt_stringArray:'String Array', opt_stringArray_desc:'Extract strings into a separate encrypted array',
+    opt_encoding:'String Encoding', opt_rotate:'Rotate Array', opt_rotate_desc:'Shift the string array after each call',
+    opt_shuffle:'Shuffle Array', opt_shuffle_desc:'Randomize the order of string array entries',
+    opt_wrappers:'String Array Wrappers', opt_wrappers_desc:'Wrap string array calls in extra functions',
+    opt_wrappers_count:'Wrapper Count', opt_wrappers_count_desc:'Number of wrapper functions to add (more = harder to reverse)',
+    opt_unicode:'Unicode Escape', opt_unicode_desc:'Convert strings to \\uXXXX unicode sequences',
+    opt_splitStrings:'Split Strings', opt_splitStrings_desc:'Split string literals into chunks of N chars',
+    opt_cf:'Control Flow Flattening', opt_cf_desc:'Flatten code flow into a switch-case state machine',
+    cf_threshold_desc:'Proportion of code affected — recommend ≤ 0.4 to avoid lag',
+    opt_dead:'Dead Code Injection', opt_dead_desc:'Insert unreachable junk code blocks',
+    dc_threshold_desc:'Injection density — recommend ≤ 0.3',
+    opt_self:'Self Defending', opt_self_desc:'Prevent code from being reformatted or prettified',
+    opt_debug:'Debug Protection', opt_debug_desc:'Block browser DevTools from being opened',
+    debug_interval_desc:'0 = run once on load, >0 = continuous polling loop (may cause lag)',
+    opt_console:'Disable Console', opt_console_desc:'Suppress all console.log / warn / error output',
+    opt_domain_lock:'Enable Domain Lock', opt_domain_lock_desc:'Script will refuse to run outside allowed domains',
+    opt_domain_redirect:'Redirect URL', opt_domain_redirect_desc:'Redirect to this URL if domain check fails',
+    opt_reserved:'Reserved Names', opt_reserved_desc:'Identifiers that should NOT be renamed (comma-separated)',
+    opt_reserved_strings:'Force Obfuscate Strings', opt_reserved_strings_desc:'Force-obfuscate these specific string literals',
+    opt_seed:'Fixed Seed', opt_seed_desc:'Use a fixed seed for reproducible output',
+    opt_sourcemap:'Generate Source Map', opt_sourcemap_desc:'Produce a source map for debugging',
+    opt_sourcemap_mode:'Source Map Mode', opt_sourcemap_url:'Source Map File Name',
+    opt_target:'Target Environment', opt_target_desc:'Adapt output for Browser or Node.js',
+    none:'None',
+    // perf
+    perf_cf:'Control Flow threshold {v} is high — reduce to ≤ 0.4',
+    perf_dc:'Dead Code Injection increases file size significantly',
+    perf_dbg:'Debug Protection interval {v}ms runs in a polling loop',
+    perf_prefix:'Performance warning: ',
+    // github
+    gh_content:'File Content', gh_load:'← From Obfuscate',
+    gh_config:'GitHub Config', gh_token:'Personal Access Token',
+    gh_owner:'Username / Owner', gh_repo:'Repository', gh_branch:'Branch',
+    gh_path:'File path in repo', gh_message:'Commit message',
+    gh_upload:'Upload to GitHub', gh_uploading:'Uploading...',
+    gh_check:'Test Connection',
+    gh_info:'Token is never stored. Create a token with scope repo at',
+    // log
+    log:'Log', log_ready:'Ready...', log_connect:'Connecting...',
+    log_ok:'Connected: ', log_err_connect:'Connection error: ',
+    log_upload_start:'Starting upload...',
+    log_exists:'File exists — updating', log_new:'File does not exist — creating',
+    log_success:'Upload successful!', log_fail:'Upload failed: ',
+    log_net_err:'Network error: ',
+    // toast
+    t_lib_err:'Library not loaded. Reload page!',
+    t_no_input:'Please enter JavaScript!',
+    t_obf_ok:'Obfuscation successful!',
+    t_obf_err:'Error: ',
+    t_no_output:'No output yet!',
+    t_copied:'Copied to clipboard!',
+    t_downloading:'Downloading...',
+    t_gh_sent:'Sent to GitHub tab',
+    t_gh_loaded:'Loaded from Obfuscate',
+    t_gh_no_code:'No obfuscated code yet!',
+    t_gh_fill:'Fill in Token, Owner, Repo, Path!',
+    t_gh_no_content:'No file content!',
+    t_gh_ok:'Upload successful!',
+    t_gh_fail:'Error: ',
+    t_gh_net:'Connection error!',
+    t_gh_check_fill:'Fill Token, Owner and Repo!',
+    t_gh_check_ok:'Connection successful!',
+    t_file:'File loaded: ',
+    tab_url:'URL',
+    url_input_label:'URL to Encode', url_placeholder:'https://example.com/path?q=value',
+    url_method:'Encoding Method',
+    url_m_b64:'Encode URL to Base64 string',
+    url_m_hex:'Convert each character to \\xHH hex code',
+    url_m_pct:'Standard percent-encoding (%XX)',
+    url_m_uni:'Convert each character to \\uXXXX unicode',
+    url_m_chr:'Generate String.fromCharCode(...) expression',
+    url_m_jsr:'Generate obfuscated JS snippet that redirects to URL',
+    url_m_html:'Generate HTML meta-refresh tag with encoded URL',
+    url_m_multi:'Stack Base64 → Hex → Percent encoding (3 layers)',
+    url_m_eval:'Wrap redirect in eval(atob(...)) — harder to read',
+    url_m_data:'Encode as data: URI with embedded redirect page',
+    url_opt_wrap:'Wrap in function', url_opt_double:'Double encode', url_opt_newtab:'Open in new tab',
+    url_output:'Encoded Output', url_output_empty:'Encoded URL will appear here...',
+    url_decode_title:'Decode / Reverse', url_decode_placeholder:'Paste encoded URL or Base64 here...',
+    url_decode_empty:'Decoded result will appear here...',
+    url_layer:'layers',
+  },
+  vi: {
+    sub:'Mã Hoá JavaScript Nâng Cao',
+    settings:'Cài Đặt', language:'Ngôn ngữ', about:'Thông tin',
+    tab_obfuscate:'Mã Hoá', tab_options:'Tuỳ Chọn', tab_github:'GitHub',
+    lib_ready:'Sẵn sàng', lib_loading:'Đang tải...', lib_err:'Không tải được thư viện.',
+    stat_input:'Input', stat_output:'Output', stat_ratio:'Tỉ lệ', stat_level:'Mức độ',
+    source_code:'Code gốc', result:'Kết quả',
+    upload:'Upload', clear:'Xoá', copy:'Copy', download:'Tải', add:'Thêm',
+    input_placeholder:'// Dán JavaScript của bạn vào đây...',
+    output_placeholder:'// Kết quả mã hoá hiện ở đây...',
+    btn_obfuscate:'Mã Hoá JavaScript', btn_obfuscating:'Đang mã hoá...',
+    presets:'Preset nhanh',
+    preset_low:'Cơ Bản', preset_medium:'Trung Bình', preset_high:'Cao', preset_max:'Tối Đa',
+    group_rename:'Đổi Tên & Nén', group_string:'String Array & Mã Hoá',
+    group_flow:'Luồng & Chèn Code', group_protection:'Bảo Vệ Runtime',
+    group_domain:'Domain Lock', group_advanced:'Tuỳ Chọn Nâng Cao',
+    tag_safe:'Không lag', tag_slow:'Có thể lag', tag_hard:'Khó giải mã',
+    opt_compact:'Compact', opt_compact_desc:'Nén output thành một dòng',
+    opt_rename:'Đổi tên biến/hàm', opt_rename_desc:'Đổi tên tất cả biến, hàm và tham số',
+    opt_transform_obj:'Đổi tên Object Keys', opt_transform_obj_desc:'Mã hoá tên thuộc tính của object',
+    opt_numbers:'Số → Biểu thức', opt_numbers_desc:'Chuyển số thành phép tính số học',
+    opt_stringArray:'String Array', opt_stringArray_desc:'Trích xuất chuỗi vào mảng được mã hoá riêng',
+    opt_encoding:'Mã hoá chuỗi', opt_rotate:'Xoay Array', opt_rotate_desc:'Dịch chuyển mảng chuỗi sau mỗi lần gọi',
+    opt_shuffle:'Xáo trộn Array', opt_shuffle_desc:'Ngẫu nhiên hoá thứ tự các phần tử trong mảng',
+    opt_wrappers:'String Array Wrappers', opt_wrappers_desc:'Bọc các lệnh gọi mảng trong các hàm phụ',
+    opt_wrappers_count:'Số lượng Wrapper', opt_wrappers_count_desc:'Số hàm bọc thêm vào (nhiều hơn = khó giải mã hơn)',
+    opt_unicode:'Unicode Escape', opt_unicode_desc:'Chuyển chuỗi thành dạng \\uXXXX',
+    opt_splitStrings:'Tách chuỗi', opt_splitStrings_desc:'Chia nhỏ chuỗi thành các đoạn N ký tự',
+    opt_cf:'Control Flow Flatten', opt_cf_desc:'Làm phức tạp luồng thực thi bằng switch-case',
+    cf_threshold_desc:'Tỉ lệ áp dụng — khuyến nghị ≤ 0.4 để tránh lag',
+    opt_dead:'Dead Code Injection', opt_dead_desc:'Chèn các khối code giả không thể thực thi',
+    dc_threshold_desc:'Mật độ chèn code giả — khuyến nghị ≤ 0.3',
+    opt_self:'Self Defending', opt_self_desc:'Chống format hoặc làm đẹp lại code',
+    opt_debug:'Debug Protection', opt_debug_desc:'Chặn mở DevTools trong trình duyệt',
+    debug_interval_desc:'0 = chỉ chạy 1 lần khi load, >0 = vòng lặp kiểm tra (có thể lag)',
+    opt_console:'Tắt Console', opt_console_desc:'Chặn tất cả console.log / warn / error',
+    opt_domain_lock:'Bật Domain Lock', opt_domain_lock_desc:'Script sẽ từ chối chạy ngoài các domain được cho phép',
+    opt_domain_redirect:'URL chuyển hướng', opt_domain_redirect_desc:'Chuyển đến URL này nếu kiểm tra domain thất bại',
+    opt_reserved:'Tên bảo lưu', opt_reserved_desc:'Các tên biến/hàm KHÔNG được đổi tên (cách nhau bởi dấu phẩy)',
+    opt_reserved_strings:'Bắt buộc mã hoá chuỗi', opt_reserved_strings_desc:'Bắt buộc mã hoá các chuỗi cụ thể này',
+    opt_seed:'Seed cố định', opt_seed_desc:'Dùng seed cố định để tái tạo output giống nhau',
+    opt_sourcemap:'Tạo Source Map', opt_sourcemap_desc:'Xuất source map để debug',
+    opt_sourcemap_mode:'Chế độ Source Map', opt_sourcemap_url:'Tên file Source Map',
+    opt_target:'Môi trường đích', opt_target_desc:'Tuỳ chỉnh output cho Browser hoặc Node.js',
+    none:'Không',
+    perf_cf:'Control Flow threshold {v} cao — giảm xuống ≤ 0.4',
+    perf_dc:'Dead Code Injection làm tăng kích thước file đáng kể',
+    perf_dbg:'Debug Protection interval {v}ms chạy vòng lặp kiểm tra',
+    perf_prefix:'Cảnh báo hiệu năng: ',
+    gh_content:'Nội dung file', gh_load:'← Lấy từ Mã Hoá',
+    gh_config:'Cấu hình GitHub', gh_token:'Personal Access Token',
+    gh_owner:'Username / Owner', gh_repo:'Repository', gh_branch:'Branch',
+    gh_path:'Đường dẫn file trong repo', gh_message:'Commit message',
+    gh_upload:'Upload lên GitHub', gh_uploading:'Đang upload...',
+    gh_check:'Kiểm tra kết nối',
+    gh_info:'Token không được lưu trên server. Tạo token với scope repo tại',
+    log:'Nhật ký', log_ready:'Sẵn sàng...', log_connect:'Đang kết nối...',
+    log_ok:'Kết nối thành công: ', log_err_connect:'Lỗi kết nối: ',
+    log_upload_start:'Bắt đầu upload...',
+    log_exists:'File đã tồn tại — sẽ cập nhật', log_new:'File chưa tồn tại — sẽ tạo mới',
+    log_success:'Upload thành công!', log_fail:'Upload thất bại: ',
+    log_net_err:'Lỗi mạng: ',
+    t_lib_err:'Thư viện chưa tải. Tải lại trang!',
+    t_no_input:'Hãy nhập JavaScript!',
+    t_obf_ok:'Mã hoá thành công!',
+    t_obf_err:'Lỗi: ',
+    t_no_output:'Chưa có kết quả!',
+    t_copied:'Đã copy vào clipboard!',
+    t_downloading:'Đang tải về...',
+    t_gh_sent:'Đã chuyển sang tab GitHub',
+    t_gh_loaded:'Đã tải từ tab Mã Hoá',
+    t_gh_no_code:'Chưa có code được mã hoá!',
+    t_gh_fill:'Điền đủ Token, Owner, Repo, Path!',
+    t_gh_no_content:'Chưa có nội dung file!',
+    t_gh_ok:'Upload thành công!',
+    t_gh_fail:'Lỗi: ',
+    t_gh_net:'Lỗi kết nối!',
+    t_gh_check_fill:'Điền Token, Owner và Repo!',
+    t_gh_check_ok:'Kết nối thành công!',
+    t_file:'Đã tải file: ',
+    tab_url:'URL',
+    url_input_label:'URL cần mã hoá', url_placeholder:'https://example.com/path?q=value',
+    url_method:'Phương thức mã hoá',
+    url_m_b64:'Mã hoá URL thành chuỗi Base64',
+    url_m_hex:'Chuyển mỗi ký tự thành mã \\xHH hex',
+    url_m_pct:'Percent-encoding tiêu chuẩn (%XX)',
+    url_m_uni:'Chuyển mỗi ký tự thành \\uXXXX unicode',
+    url_m_chr:'Tạo biểu thức String.fromCharCode(...)',
+    url_m_jsr:'Tạo đoạn JS bị che giấu, tự động redirect đến URL',
+    url_m_html:'Tạo thẻ meta-refresh HTML với URL được mã hoá',
+    url_m_multi:'Chồng 3 lớp: Base64 → Hex → Percent encode',
+    url_m_eval:'Bọc redirect trong eval(atob(...)) — khó đọc hơn',
+    url_m_data:'Mã hoá thành data: URI chứa trang redirect nhúng sẵn',
+    url_opt_wrap:'Bọc trong hàm', url_opt_double:'Mã hoá 2 lần', url_opt_newtab:'Mở tab mới',
+    url_output:'Kết quả', url_output_empty:'Kết quả mã hoá sẽ hiện ở đây...',
+    url_decode_title:'Giải mã / Decode', url_decode_placeholder:'Dán URL hoặc chuỗi Base64 đã mã hoá...',
+    url_decode_empty:'Kết quả giải mã sẽ hiện ở đây...',
+    url_layer:'lớp',
+  }
+};
 
-        // Quản lý blob URL để tránh rò rỉ bộ nhớ
-        let currentBlobUrl = null;
+let lang = localStorage.getItem('jsc_lang') || 'en';
 
-        // --- MẪU CODE MẶC ĐỊNH (đẹp, thể hiện đầy đủ khả năng) ---
-        const DEFAULT_CODE = `<!DOCTYPE html>
-<html lang="vi">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Live Preview Demo</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        body {
-            background: linear-gradient(145deg, #f5f7fc 0%, #eef2f9 100%);
-            font-family: 'Segoe UI', system-ui, 'Inter', sans-serif;
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 1.5rem;
-        }
-        .glass-card {
-            background: rgba(255,255,255,0.92);
-            backdrop-filter: blur(2px);
-            border-radius: 2rem;
-            box-shadow: 0 20px 35px -12px rgba(0,0,0,0.2);
-            padding: 2rem 2.2rem;
-            max-width: 600px;
-            width: 100%;
-            text-align: center;
-            border: 1px solid rgba(255,255,255,0.5);
-            transition: all 0.2s;
-        }
-        h1 {
-            font-size: 2rem;
-            background: linear-gradient(120deg, #0b3b3c, #2c786c);
-            background-clip: text;
-            -webkit-background-clip: text;
-            color: transparent;
-            margin-bottom: 0.75rem;
-        }
-        .badge {
-            background: #e9f5f2;
-            padding: 0.3rem 1rem;
-            border-radius: 60px;
-            display: inline-block;
-            font-size: 0.8rem;
-            font-weight: 500;
-            color: #1f6e5c;
-            margin-bottom: 1rem;
-        }
-        p {
-            color: #2c3e4e;
-            line-height: 1.5;
-            margin: 1rem 0;
-        }
-        button {
-            background: #1f6e5c;
-            border: none;
-            color: white;
-            padding: 0.7rem 1.6rem;
-            border-radius: 40px;
-            font-weight: 600;
-            font-size: 0.9rem;
-            cursor: pointer;
-            margin-top: 1rem;
-            transition: all 0.2s;
-            box-shadow: 0 3px 8px rgba(0,0,0,0.1);
-        }
-        button:hover {
-            background: #0f5546;
-            transform: scale(0.98);
-        }
-        .feature-list {
-            text-align: left;
-            background: #f9fbfd;
-            padding: 1rem;
-            border-radius: 1.2rem;
-            margin: 1.5rem 0 0.5rem;
-            font-size: 0.85rem;
-        }
-        .feature-list li {
-            margin: 0.5rem 0;
-            list-style-type: "✓  ";
-            color: #2c5f5a;
-        }
-        footer {
-            margin-top: 1.8rem;
-            font-size: 0.7rem;
-            color: #6f8f9a;
-        }
-    </style>
-</head>
-<body>
-    <div class="glass-card">
-        <div class="badge">✨ Live Editor Ready</div>
-        <h1>Chào mừng đến với<br>Code Viewer</h1>
-        <p>👩‍💻 Bạn có thể dán bất kỳ mã HTML/CSS/JS nào vào khung bên trái.<br>Nhấn <strong>Run & Preview</strong> để xem kết quả ngay lập tức.</p>
-        <button onclick="alert('🎉 Tương tác thành công! Bạn có thể build bất cứ giao diện nào.')">Thử tương tác</button>
-        <div class="feature-list">
-            <li>Hỗ trợ đầy đủ HTML5, CSS3, JavaScript</li>
-            <li>Chạy an toàn, hiển thị y hệt trình duyệt</li>
-            <li>Lưu lại code sau mỗi lần Run (LocalStorage)</li>
-        </div>
-        <footer>💡 Hãy sửa code bên trái & nhấn Run — preview cập nhật tức thì</footer>
-    </div>
-</body>
-</html>`;
+function t(key){ return (STRINGS[lang]||STRINGS.en)[key] || key; }
 
-        // --- Lưu code vào localStorage & tạo preview ---
-        function saveCodeToLocal(code) {
-            try {
-                localStorage.setItem('live_code_preview', code);
-            } catch(e) { console.warn(e); }
-        }
+function applyI18n() {
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const k = el.getAttribute('data-i18n');
+    el.textContent = t(k);
+  });
+  document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+    el.placeholder = t(el.getAttribute('data-i18n-placeholder'));
+  });
+  // update dynamic elements
+  document.getElementById('libLabel').textContent =
+    typeof JavaScriptObfuscator !== 'undefined' ? t('lib_ready') : t('lib_loading');
+  // btn
+  const btn = document.getElementById('btnText');
+  if(btn && !document.getElementById('encryptBtn').disabled) btn.textContent = t('btn_obfuscate');
+  // preset pills
+  ['low','medium','high','max'].forEach(k => {
+    const pill = document.querySelector(`.pill[onclick*="'${k}'"]`);
+    if(pill) pill.textContent = t('preset_'+k);
+  });
+  // log ready
+  const log = document.getElementById('statusLog');
+  if(log && log.children.length === 0) log.textContent = t('log_ready');
+  // upload btn
+  document.getElementById('uploadBtnText').textContent = t('gh_upload');
+  // lang buttons
+  document.getElementById('langEN').classList.toggle('active', lang==='en');
+  document.getElementById('langVI').classList.toggle('active', lang==='vi');
+  updatePerfWarn();
+}
 
-        function loadCodeFromLocal() {
-            const saved = localStorage.getItem('live_code_preview');
-            if (saved !== null && saved.trim() !== "") {
-                return saved;
-            }
-            return DEFAULT_CODE;
-        }
+function setLang(l) {
+  lang = l;
+  localStorage.setItem('jsc_lang', l);
+  applyI18n();
+}
 
-        // Hàm cập nhật preview (tạo blob URL và gán cho iframe)
-        function updatePreview() {
-            let code = editor.value;
-            
-            // Nếu code rỗng, hiển thị thông báo nhẹ nhàng (nhưng vẫn tạo trang trống)
-            if (!code || code.trim() === "") {
-                code = `<!DOCTYPE html>
-<html>
-<head><meta charset="UTF-8"><title>Trống</title><style>body{font-family:sans-serif;display:flex;justify-content:center;align-items:center;height:100vh;background:#f1f5f9;color:#475569;}</style></head>
-<body><div style="text-align:center"><h3>📭 Không có mã nguồn</h3><p>Hãy dán mã HTML/CSS/JS vào khung bên trái và nhấn "Run".</p></div></body>
-</html>`;
-            }
-            
-            // Lưu vào localStorage (chỉ lưu nội dung thực tế - kể cả rỗng thì lưu rỗng)
-            saveCodeToLocal(editor.value);
-            
-            // Revoke blob URL cũ nếu có
-            if (currentBlobUrl) {
-                URL.revokeObjectURL(currentBlobUrl);
-                currentBlobUrl = null;
-            }
-            
-            // Tạo blob mới với nội dung HTML
-            const blob = new Blob([code], { type: 'text/html' });
-            const blobUrl = URL.createObjectURL(blob);
-            currentBlobUrl = blobUrl;
-            
-            // Cập nhật iframe
-            iframe.src = blobUrl;
-        }
-        
-        // Khôi phục code từ localStorage hoặc mặc định, hiển thị lên editor và preview
-        function loadInitialCode() {
-            const storedCode = loadCodeFromLocal();
-            editor.value = storedCode;
-            // Cập nhật preview ngay khi tải trang
-            updatePreview();
-        }
-        
-        // --- Reset về code mẫu ---
-        function resetToDefault() {
-            editor.value = DEFAULT_CODE;
-            saveCodeToLocal(DEFAULT_CODE);
-            updatePreview();
-        }
-        
-        // --- Xóa toàn bộ code (clear editor) ---
-        function clearEditor() {
-            editor.value = "";
-            saveCodeToLocal("");   // lưu trống
-            updatePreview();       // preview sẽ hiển thị thông báo trống
-        }
-        
-        // --- Thêm sự kiện cho các nút ---
-        runBtn.addEventListener('click', () => {
-            updatePreview();
-        });
-        
-        resetBtn.addEventListener('click', () => {
-            resetToDefault();
-        });
-        
-        clearBtn.addEventListener('click', () => {
-            clearEditor();
-        });
-        
-        // Phím tắt Ctrl+Enter (hoặc Cmd+Enter) để chạy preview
-        function handleShortcut(e) {
-            // Kiểm tra Ctrl (Windows/Linux) hoặc Meta (Mac)
-            if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
-                e.preventDefault();
-                updatePreview();
-                // Hiệu ứng nhấp nháy nhẹ (optional)
-                runBtn.style.transform = 'scale(0.97)';
-                setTimeout(() => { runBtn.style.transform = ''; }, 120);
-            }
-        }
-        
-        document.addEventListener('keydown', handleShortcut);
-        
-        // Tự động lưu code khi nhấn Run (đã có trong updatePreview), ngoài ra
-        // có thể lưu khi blur khỏi textarea? KHÔNG cần, nhưng để tránh mất dữ liệu khi tải lại,
-        // nếu người dùng chỉ sửa code và thoát trang mà không nhấn run, vẫn có thể mất.
-        // Giải pháp: tự động lưu code khi người dùng dừng gõ (debounce) để trải nghiệm mượt.
-        // Thêm tính năng auto-save draft (lưu vào local mỗi khi thay đổi)
-        let autoSaveTimer;
-        editor.addEventListener('input', function() {
-            clearTimeout(autoSaveTimer);
-            autoSaveTimer = setTimeout(() => {
-                const currentCode = editor.value;
-                saveCodeToLocal(currentCode);
-            }, 600);
-        });
-        
-        // Khi khởi tạo nếu có lỗi iframe do sandbox? Không sao, vẫn hoạt động tốt.
-        // Ngoài ra thêm fallback cho iframe khi không load (hiếm)
-        iframe.addEventListener('error', () => {
-            console.log("Iframe load error, retry?");
-        });
-        
-        // Bắt đầu mọi thứ
-        loadInitialCode();
-        
-        // Xử lý khi resize window đảm bảo iframe không bị méo
-        window.addEventListener('resize', () => {
-            // Đơn giản là trigger lại không cần thiết, nhưng giữ ổn định layout
-            if (iframe && iframe.style) {
-                // chỉ để đồng bộ, không ảnh hưởng nội dung
-            }
-        });
-        
-        // thông báo cho người dùng nếu dán code dài quá
-        console.log("Ready: Bạn có thể dán code HTML bất kỳ và xem kết quả trực tiếp.");
-    })();
+// ── Settings modal ────────────────────────────────────────
+function openSettings(){ document.getElementById('settingsOverlay').classList.add('open'); }
+function closeSettings(){ document.getElementById('settingsOverlay').classList.remove('open'); }
+
+// ── Lib check ─────────────────────────────────────────────
+window.addEventListener('load', () => {
+  const dot = document.getElementById('libDot');
+  const lbl = document.getElementById('libLabel');
+  if (typeof JavaScriptObfuscator !== 'undefined') {
+    dot.classList.add('ok'); lbl.textContent = t('lib_ready'); lbl.style.color = 'var(--green)';
+  } else {
+    dot.classList.add('err'); lbl.textContent = 'Error'; lbl.style.color = 'var(--red)';
+    document.getElementById('errBanner').classList.add('show');
+    document.getElementById('errMsg').textContent = 'JavaScriptObfuscator is not defined';
+    document.getElementById('encryptBtn').disabled = true;
+  }
+  applyI18n();
+});
+
+// ── Tabs ──────────────────────────────────────────────────
+function switchTab(name, el) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('page-' + name).classList.add('active');
+}
+
+// ── Stats ─────────────────────────────────────────────────
+function fmtBytes(b) {
+  if (!b) return '0B';
+  if (b < 1024) return b + 'B';
+  if (b < 1048576) return (b/1024).toFixed(1) + 'K';
+  return (b/1048576).toFixed(1) + 'M';
+}
+function updateStats() {
+  const iCode = document.getElementById('inputCode').value;
+  const oCode = document.getElementById('outputCode').value;
+  const iBytes = new Blob([iCode]).size;
+  const oBytes = new Blob([oCode]).size;
+  document.getElementById('inputSize').textContent  = fmtBytes(iBytes);
+  document.getElementById('outputSize').textContent = fmtBytes(oBytes);
+  document.getElementById('inputChars').textContent  = iCode.length.toLocaleString() + ' chars';
+  document.getElementById('outputChars').textContent = oCode.length.toLocaleString() + ' chars';
+  if (iBytes > 0 && oBytes > 0) {
+    const r = ((oBytes / iBytes) * 100).toFixed(0);
+    document.getElementById('ratioStat').textContent = r + '%';
+  } else {
+    document.getElementById('ratioStat').textContent = '—';
+  }
+}
+
+// ── Slider toggles ────────────────────────────────────────
+function onCfChange() {
+  document.getElementById('cfSliderRow').style.display =
+    document.getElementById('opt_controlFlow').checked ? 'block' : 'none';
+  updatePerfWarn();
+}
+function onDcChange() {
+  document.getElementById('dcSliderRow').style.display =
+    document.getElementById('opt_deadCode').checked ? 'block' : 'none';
+  updatePerfWarn();
+}
+function onDbgChange() {
+  document.getElementById('dbgIntervalRow').style.display =
+    document.getElementById('opt_debugProtection').checked ? 'block' : 'none';
+  updatePerfWarn();
+}
+function toggleWrapperOpts() {
+  document.getElementById('wrapperOptsRow').style.display =
+    document.getElementById('opt_wrappers').checked ? 'block' : 'none';
+}
+function toggleDomainUI() {
+  document.getElementById('domainUI').style.display =
+    document.getElementById('opt_domainLock').checked ? 'block' : 'none';
+}
+function toggleSourceMap() {
+  document.getElementById('sourceMapSection').classList.toggle('show',
+    document.getElementById('opt_sourceMap').checked);
+}
+
+// ── Domain list ───────────────────────────────────────────
+let domains = [];
+function renderDomains() {
+  const list = document.getElementById('domainList');
+  list.innerHTML = '';
+  domains.forEach((d, i) => {
+    const chip = document.createElement('div');
+    chip.className = 'domain-chip';
+    chip.innerHTML = `${d}<button onclick="removeDomain(${i})"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>`;
+    list.appendChild(chip);
+  });
+}
+function addDomain() {
+  const inp = document.getElementById('domainInput');
+  const v = inp.value.trim().replace(/^https?:\/\//,'').replace(/\/.*/,'');
+  if (!v) return;
+  if (!domains.includes(v)) { domains.push(v); renderDomains(); }
+  inp.value = '';
+}
+function removeDomain(i) { domains.splice(i,1); renderDomains(); }
+
+// ── Seed ──────────────────────────────────────────────────
+function randomSeed() {
+  const inp = document.getElementById('seedInput');
+  inp.value = Math.floor(Math.random() * 999999999);
+}
+
+// ── Perf warning ──────────────────────────────────────────
+function updatePerfWarn() {
+  const cf  = document.getElementById('opt_controlFlow').checked;
+  const cfT = parseFloat(document.getElementById('opt_cfThreshold').value);
+  const dc  = document.getElementById('opt_deadCode').checked;
+  const dbg = document.getElementById('opt_debugProtection').checked;
+  const dbgInt = parseInt(document.getElementById('opt_dbgInterval').value);
+  const warns = [];
+  if (cf && cfT > 0.4) warns.push(t('perf_cf').replace('{v}', cfT.toFixed(1)));
+  if (dc)              warns.push(t('perf_dc'));
+  if (dbg && dbgInt>0) warns.push(t('perf_dbg').replace('{v}', dbgInt));
+  const el = document.getElementById('perfWarn');
+  if (warns.length) {
+    el.classList.add('show');
+    document.getElementById('perfWarnText').innerHTML = '<b>'+t('perf_prefix')+'</b>' + warns.join(' · ');
+  } else { el.classList.remove('show'); }
+}
+
+// ── Presets ───────────────────────────────────────────────
+const LEVEL_LABELS = { low:'Basic', medium:'Med', high:'High', max:'Max' };
+const LEVEL_LABELS_VI = { low:'CB', medium:'TB', high:'Cao', max:'Max' };
+
+const PRESETS = {
+  low:{
+    compact:true, rename:'hexadecimal', transformObj:false, numbers:false,
+    sa:true, enc:'none', rotate:false, shuffle:false, wrappers:false, wrappersCount:2, wrapperType:'variable',
+    unicode:false, split:false, splitChunk:'5',
+    cf:false, cfT:0.3, dc:false, dcT:0.2,
+    self:false, dbg:false, dbgInt:0, console:false,
+    domainLock:false, sourceMap:false, target:'browser', seed:false
+  },
+  medium:{
+    compact:true, rename:'hexadecimal', transformObj:false, numbers:false,
+    sa:true, enc:'base64', rotate:true, shuffle:true, wrappers:false, wrappersCount:2, wrapperType:'variable',
+    unicode:false, split:false, splitChunk:'5',
+    cf:false, cfT:0.3, dc:false, dcT:0.2,
+    self:false, dbg:false, dbgInt:0, console:false,
+    domainLock:false, sourceMap:false, target:'browser', seed:false
+  },
+  high:{
+    compact:true, rename:'hexadecimal', transformObj:true, numbers:true,
+    sa:true, enc:'rc4', rotate:true, shuffle:true, wrappers:true, wrappersCount:5, wrapperType:'function',
+    unicode:true, split:true, splitChunk:'5',
+    cf:true, cfT:0.3, dc:false, dcT:0.2,
+    self:true, dbg:true, dbgInt:0, console:false,
+    domainLock:false, sourceMap:false, target:'browser', seed:false
+  },
+  max:{
+    compact:true, rename:'mangled-shuffled', transformObj:true, numbers:true,
+    sa:true, enc:'rc4', rotate:true, shuffle:true, wrappers:true, wrappersCount:10, wrapperType:'function',
+    unicode:true, split:true, splitChunk:'3',
+    cf:true, cfT:0.4, dc:true, dcT:0.2,
+    self:true, dbg:true, dbgInt:0, console:true,
+    domainLock:false, sourceMap:false, target:'browser', seed:false
+  }
+};
+
+function applyPreset(level, btn) {
+  document.querySelectorAll('.pill').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  const p = PRESETS[level];
+  const labels = lang === 'vi' ? LEVEL_LABELS_VI : LEVEL_LABELS;
+  document.getElementById('protection').textContent = labels[level];
+
+  const s = (id, v, sel) => { const el = document.getElementById(id); sel ? el.value = v : el.checked = v; };
+  s('opt_compact', p.compact); s('opt_rename', p.rename, true); s('opt_transformObj', p.transformObj);
+  s('opt_numbers', p.numbers); s('opt_stringArray', p.sa);
+  s('opt_stringEncoding', p.enc, true); s('opt_rotateStringArray', p.rotate);
+  s('opt_shuffleStringArray', p.shuffle); s('opt_wrappers', p.wrappers);
+  s('opt_wrappersCount', p.wrappersCount, true); s('opt_wrapperType', p.wrapperType, true);
+  document.getElementById('wrappersCountVal').textContent = p.wrappersCount;
+  document.getElementById('wrapperOptsRow').style.display = p.wrappers ? 'block' : 'none';
+  s('opt_unicode', p.unicode); s('opt_splitStrings', p.split);
+  s('opt_splitChunk', p.splitChunk, true);
+  s('opt_controlFlow', p.cf);
+  document.getElementById('opt_cfThreshold').value = p.cfT;
+  document.getElementById('cfVal').textContent = p.cfT.toFixed(1);
+  document.getElementById('cfSliderRow').style.display = p.cf ? 'block' : 'none';
+  s('opt_deadCode', p.dc);
+  document.getElementById('opt_dcThreshold').value = p.dcT;
+  document.getElementById('dcVal').textContent = p.dcT.toFixed(1);
+  document.getElementById('dcSliderRow').style.display = p.dc ? 'block' : 'none';
+  s('opt_selfDefending', p.self); s('opt_debugProtection', p.dbg);
+  document.getElementById('opt_dbgInterval').value = p.dbgInt;
+  document.getElementById('dbgVal').textContent = p.dbgInt + ' ms';
+  document.getElementById('dbgIntervalRow').style.display = p.dbg ? 'block' : 'none';
+  s('opt_disableConsole', p.console);
+  s('opt_sourceMap', p.sourceMap);
+  document.getElementById('sourceMapSection').classList.toggle('show', p.sourceMap);
+  s('opt_target', p.target, true); s('opt_useSeed', p.seed);
+  document.getElementById('seedInput').disabled = !p.seed;
+  updatePerfWarn();
+}
+
+// ── Obfuscate ─────────────────────────────────────────────
+function buildOptions() {
+  const enc    = document.getElementById('opt_stringEncoding').value;
+  const cfT    = parseFloat(document.getElementById('opt_cfThreshold').value);
+  const dcT    = parseFloat(document.getElementById('opt_dcThreshold').value);
+  const dbgInt = parseInt(document.getElementById('opt_dbgInterval').value);
+  const useWrap= document.getElementById('opt_wrappers').checked;
+  const useSeed= document.getElementById('opt_useSeed').checked;
+  const useMap = document.getElementById('opt_sourceMap').checked;
+
+  // Parse reserved names
+  const reservedNames = document.getElementById('opt_reserved').value
+    .split(',').map(s=>s.trim()).filter(Boolean);
+  const reservedStrings = document.getElementById('opt_reservedStrings').value
+    .split(',').map(s=>s.trim()).filter(Boolean);
+
+  const opts = {
+    compact:                        document.getElementById('opt_compact').checked,
+    identifierNamesGenerator:       document.getElementById('opt_rename').value,
+    transformObjectKeys:            document.getElementById('opt_transformObj').checked,
+    numbersToExpressions:           document.getElementById('opt_numbers').checked,
+    stringArray:                    document.getElementById('opt_stringArray').checked,
+    stringArrayEncoding:            enc === 'none' ? [] : [enc],
+    rotateStringArray:              document.getElementById('opt_rotateStringArray').checked,
+    shuffleStringArray:             document.getElementById('opt_shuffleStringArray').checked,
+    unicodeEscapeSequence:          document.getElementById('opt_unicode').checked,
+    splitStrings:                   document.getElementById('opt_splitStrings').checked,
+    splitStringsChunkLength:        parseInt(document.getElementById('opt_splitChunk').value),
+    selfDefending:                  document.getElementById('opt_selfDefending').checked,
+    controlFlowFlattening:          document.getElementById('opt_controlFlow').checked,
+    controlFlowFlatteningThreshold: cfT,
+    deadCodeInjection:              document.getElementById('opt_deadCode').checked,
+    deadCodeInjectionThreshold:     dcT,
+    debugProtection:                document.getElementById('opt_debugProtection').checked,
+    debugProtectionInterval:        dbgInt,
+    disableConsoleOutput:           document.getElementById('opt_disableConsole').checked,
+    target:                         document.getElementById('opt_target').value,
+    sourceMap:                      useMap,
+    sourceMapMode:                  useMap ? document.getElementById('opt_sourceMapMode').value : 'separate',
+    sourceMapFileName:              useMap ? (document.getElementById('opt_sourceMapUrl').value || 'out.js.map') : '',
+  };
+
+  // String Array Wrappers
+  if (useWrap && opts.stringArray) {
+    opts.stringArrayWrappersCount = parseInt(document.getElementById('opt_wrappersCount').value);
+    opts.stringArrayWrappersType  = document.getElementById('opt_wrapperType').value;
+    opts.stringArrayWrappersChainedCalls = true;
+  }
+
+  // Reserved names
+  if (reservedNames.length) opts.reservedNames = reservedNames;
+  if (reservedStrings.length) opts.reservedStrings = reservedStrings;
+
+  // Domain lock
+  if (document.getElementById('opt_domainLock').checked && domains.length) {
+    opts.domainLock = domains;
+    const redir = document.getElementById('opt_domainRedirect').value.trim();
+    if (redir) opts.domainLockRedirectUrl = redir;
+  }
+
+  // Seed
+  if (useSeed) {
+    const sv = parseInt(document.getElementById('seedInput').value);
+    if (!isNaN(sv)) opts.seed = sv;
+  }
+
+  return opts;
+}
+
+function obfuscate() {
+  if (typeof JavaScriptObfuscator === 'undefined') { toast(t('t_lib_err'), 'err'); return; }
+  const code = document.getElementById('inputCode').value.trim();
+  if (!code) { toast(t('t_no_input'), 'err'); return; }
+  setLoading(true);
+  setTimeout(() => {
+    try {
+      const opts   = buildOptions();
+      const result = JavaScriptObfuscator.obfuscate(code, opts);
+      let output   = result.getObfuscatedCode();
+
+      // If separate source map, also offer it as a download
+      if (opts.sourceMap && opts.sourceMapMode === 'separate') {
+        try {
+          const mapStr = result.getSourceMap();
+          if (mapStr) {
+            const mapBlob = new Blob([mapStr], {type:'application/json'});
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(mapBlob);
+            a.download = opts.sourceMapFileName || 'out.js.map';
+            a.click();
+          }
+        } catch(_) {}
+      }
+
+      document.getElementById('outputCode').value = output;
+      updateStats();
+      setLoading(false);
+      toast(t('t_obf_ok'), 'ok');
+    } catch (e) {
+      setLoading(false);
+      toast(t('t_obf_err') + e.message, 'err');
+      console.error('[JSCipher]', e);
+    }
+  }, 50);
+}
+
+function setLoading(on) {
+  document.getElementById('spinner').classList.toggle('show', on);
+  document.getElementById('btnText').textContent = on ? t('btn_obfuscating') : t('btn_obfuscate');
+  document.getElementById('encryptBtn').disabled = on;
+}
+
+// ── File helpers ──────────────────────────────────────────
+function loadFile(e) {
+  const file = e.target.files[0]; if (!file) return;
+  const r = new FileReader();
+  r.onload = ev => { document.getElementById('inputCode').value = ev.target.result; updateStats(); toast(t('t_file') + file.name, 'ok'); };
+  r.readAsText(file);
+}
+function clearAll() {
+  document.getElementById('inputCode').value = '';
+  document.getElementById('outputCode').value = '';
+  updateStats();
+}
+function copyOutput() {
+  const out = document.getElementById('outputCode').value;
+  if (!out) { toast(t('t_no_output'), 'err'); return; }
+  navigator.clipboard.writeText(out).then(() => toast(t('t_copied'), 'ok'));
+}
+function downloadOutput() {
+  const out = document.getElementById('outputCode').value;
+  if (!out) { toast(t('t_no_output'), 'err'); return; }
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([out], {type:'text/javascript'}));
+  a.download = 'obfuscated.js'; a.click();
+  toast(t('t_downloading'), 'ok');
+}
+function sendToGitHub() {
+  const out = document.getElementById('outputCode').value;
+  if (!out) { toast(t('t_gh_no_code'), 'err'); return; }
+  document.getElementById('ghContent').value = out;
+  document.querySelectorAll('.tab')[2].click();
+  toast(t('t_gh_sent'), 'info');
+}
+function loadFromObfuscator() {
+  const out = document.getElementById('outputCode').value;
+  if (!out) { toast(t('t_gh_no_code'), 'err'); return; }
+  document.getElementById('ghContent').value = out;
+  toast(t('t_gh_loaded'), 'ok');
+}
+
+// ── GitHub ────────────────────────────────────────────────
+const ghH = tk => ({
+  'Authorization':'Bearer '+tk, 'Accept':'application/vnd.github+json',
+  'Content-Type':'application/json', 'X-GitHub-Api-Version':'2022-11-28'
+});
+function addLog(msg, type) {
+  const log = document.getElementById('statusLog');
+  if (!log.querySelector('.log-line')) log.innerHTML = '';
+  const line = document.createElement('div');
+  line.className = 'log-line' + (type ? ' log-'+type : '');
+  line.textContent = '['+new Date().toLocaleTimeString()+'] '+msg;
+  log.appendChild(line); log.scrollTop = log.scrollHeight;
+}
+function clearLog() { document.getElementById('statusLog').innerHTML = ''; }
+
+async function checkRepo() {
+  const token = document.getElementById('ghToken').value.trim();
+  const owner = document.getElementById('ghOwner').value.trim();
+  const repo  = document.getElementById('ghRepo').value.trim();
+  if (!token||!owner||!repo) { toast(t('t_gh_check_fill'), 'err'); return; }
+  addLog(t('log_connect'), 'info');
+  try {
+    const res = await fetch(`https://api.github.com/repos/${owner}/${repo}`, {headers:ghH(token)});
+    if (res.ok) {
+      const d = await res.json();
+      addLog(t('log_ok') + d.full_name + ' · branch: ' + d.default_branch, 'ok');
+      toast(t('t_gh_check_ok'), 'ok');
+    } else {
+      const e = await res.json();
+      addLog(t('log_err_connect') + e.message, 'err');
+      toast(t('t_gh_fail') + e.message, 'err');
+    }
+  } catch(e) { addLog(t('log_err_connect') + e.message, 'err'); }
+}
+
+async function uploadToGitHub() {
+  const token   = document.getElementById('ghToken').value.trim();
+  const owner   = document.getElementById('ghOwner').value.trim();
+  const repo    = document.getElementById('ghRepo').value.trim();
+  const branch  = document.getElementById('ghBranch').value.trim() || 'main';
+  const path    = document.getElementById('ghPath').value.trim();
+  const message = document.getElementById('ghMessage').value.trim() || 'Update via JSCipher';
+  const content = document.getElementById('ghContent').value;
+  if (!token||!owner||!repo||!path) { toast(t('t_gh_fill'), 'err'); return; }
+  if (!content) { toast(t('t_gh_no_content'), 'err'); return; }
+
+  document.getElementById('uploadSpinner').classList.add('show');
+  document.getElementById('uploadBtnText').textContent = t('gh_uploading');
+  document.getElementById('uploadBtn').disabled = true;
+  clearLog(); addLog(t('log_upload_start'), 'info');
+
+  const encoded = btoa(unescape(encodeURIComponent(content)));
+  let sha = null;
+  try {
+    const check = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${path}?ref=${branch}`, {headers:ghH(token)});
+    if (check.ok) { sha = (await check.json()).sha; addLog(t('log_exists'), 'warn'); }
+    else addLog(t('log_new'), 'info');
+  } catch(_) {}
+
+  const body = {message, content:encoded, branch}; if (sha) body.sha = sha;
+  try {
+    const res = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${path}`, {
+      method:'PUT', headers:ghH(token), body:JSON.stringify(body)
+    });
+    if (res.ok) {
+      const d = await res.json();
+      addLog(t('log_success'), 'ok');
+      addLog(d.content.html_url, 'ok');
+      toast(t('t_gh_ok'), 'ok');
+    } else {
+      const e = await res.json();
+      addLog(t('log_fail') + e.message, 'err');
+      toast(t('t_gh_fail') + e.message, 'err');
+    }
+  } catch(e) { addLog(t('log_net_err') + e.message, 'err'); toast(t('t_gh_net'), 'err'); }
+
+  document.getElementById('uploadSpinner').classList.remove('show');
+  document.getElementById('uploadBtnText').textContent = t('gh_upload');
+  document.getElementById('uploadBtn').disabled = false;
+}
+
+// ══════════════════════════════════════════════════════════
+//  URL ENCODER
+// ══════════════════════════════════════════════════════════
+let urlMethod = 'base64';
+
+function selectMethod(m, el) {
+  urlMethod = m;
+  document.querySelectorAll('.method-card').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  runUrlEncode();
+}
+
+function onUrlInput() { runUrlEncode(); }
+
+function clearUrl() {
+  document.getElementById('urlInput').value = '';
+  setUrlOutput('', true);
+}
+
+function setUrlOutput(text, empty) {
+  const el = document.getElementById('urlOutput');
+  if (empty || !text) {
+    el.classList.add('empty');
+    el.textContent = t('url_output_empty');
+    document.getElementById('urlLayerBadge').style.display = 'none';
+  } else {
+    el.classList.remove('empty');
+    el.textContent = text;
+  }
+}
+
+function setLayerBadge(n) {
+  const badge = document.getElementById('urlLayerBadge');
+  if (n > 1) {
+    badge.style.display = 'inline-flex';
+    document.getElementById('urlLayerText').textContent = n + ' ' + t('url_layer');
+  } else {
+    badge.style.display = 'none';
+  }
+}
+
+function runUrlEncode() {
+  const raw = document.getElementById('urlInput').value.trim();
+  if (!raw) { setUrlOutput('', true); return; }
+  const wrap    = document.getElementById('urlOptWrap').checked;
+  const dbl     = document.getElementById('urlOptDouble').checked;
+  const newTab  = document.getElementById('urlOptNewTab').checked;
+
+  let result = '';
+  let layers = 1;
+
+  try {
+    switch (urlMethod) {
+      case 'base64':
+        result = toBase64(raw);
+        if (dbl) { result = toBase64(result); layers = 2; }
+        setLayerBadge(layers);
+        break;
+
+      case 'hex':
+        result = toHex(raw);
+        if (dbl) { result = toHex(result); layers = 2; }
+        setLayerBadge(layers);
+        break;
+
+      case 'percent':
+        result = encodeURIComponent(raw);
+        if (dbl) { result = encodeURIComponent(result); layers = 2; }
+        setLayerBadge(layers);
+        break;
+
+      case 'unicode':
+        result = toUnicode(raw);
+        setLayerBadge(1);
+        break;
+
+      case 'charcode':
+        result = toCharCode(raw);
+        setLayerBadge(1);
+        break;
+
+      case 'js_redirect': {
+        const encoded = toBase64(raw);
+        const tgt = newTab ? 'window.open(atob("'+encoded+'"),"_blank")' : 'window.location.href=atob("'+encoded+'")';
+        result = wrap
+          ? '(function(){'+tgt+';})();'
+          : tgt + ';';
+        setLayerBadge(2);
+        break;
+      }
+
+      case 'html_meta': {
+        const pct = encodeURIComponent(raw);
+        result = '<meta http-equiv="refresh" content="0;url='+pct+'">';
+        if (newTab) result += '\n<!-- Note: meta-refresh cannot open new tab. Use JS Redirect instead. -->';
+        setLayerBadge(1);
+        break;
+      }
+
+      case 'multilayer': {
+        const l1 = toBase64(raw);
+        const l2 = toHex(l1);
+        const l3 = encodeURIComponent(l2);
+        result = l3;
+        layers = 3;
+        setLayerBadge(3);
+        break;
+      }
+
+      case 'eval_b64': {
+        const b64 = toBase64(raw);
+        const locLine = newTab ? 'window.open(u,"_blank")' : 'window.location.href=u';
+        const inner = 'var u=atob("'+b64+'");'+locLine+';';
+        result = wrap
+          ? 'eval((function(){return atob("'+toBase64(inner)+'")})());'
+          : 'eval(atob("'+toBase64(inner)+'"));';
+        setLayerBadge(3);
+        break;
+      }
+
+      case 'data_uri': {
+        const redirect = newTab
+          ? `<script>window.open("${raw}","_blank");<\/script>`
+          : `<meta http-equiv="refresh" content="0;url=${encodeURIComponent(raw)}">`;
+        const html = `<!DOCTYPE html><html><head>${redirect}</head><body></body></html>`;
+        result = 'data:text/html;base64,' + toBase64(html);
+        setLayerBadge(2);
+        break;
+      }
+
+      default:
+        result = raw;
+    }
+  } catch(e) {
+    result = 'Error: ' + e.message;
+  }
+
+  setUrlOutput(result, false);
+}
+
+// ── Encoding helpers ──────────────────────────────────────
+function toBase64(str) {
+  return btoa(unescape(encodeURIComponent(str)));
+}
+function toHex(str) {
+  return Array.from(str).map(c => '\\x' + c.charCodeAt(0).toString(16).padStart(2,'0')).join('');
+}
+function toUnicode(str) {
+  return Array.from(str).map(c => '\\u' + c.charCodeAt(0).toString(16).padStart(4,'0')).join('');
+}
+function toCharCode(str) {
+  const codes = Array.from(str).map(c => c.charCodeAt(0)).join(',');
+  return 'String.fromCharCode(' + codes + ')';
+}
+
+// ── Decode ────────────────────────────────────────────────
+function runDecode() {
+  const raw = document.getElementById('urlDecodeInput').value.trim();
+  const out = document.getElementById('urlDecodeOutput');
+  if (!raw) { out.textContent = t('url_decode_empty'); out.classList.add('empty'); return; }
+  out.classList.remove('empty');
+  const results = [];
+
+  // Try Base64
+  try { results.push('Base64: ' + decodeURIComponent(escape(atob(raw)))); } catch(_) {}
+  // Try percent decode
+  try { const d = decodeURIComponent(raw); if (d !== raw) results.push('Percent: ' + d); } catch(_) {}
+  // Try double percent
+  try { const d = decodeURIComponent(decodeURIComponent(raw)); if (d !== raw) results.push('Double %: ' + d); } catch(_) {}
+  // Strip hex escapes \xNN
+  try {
+    const d = raw.replace(/\\x([0-9a-fA-F]{2})/g, (_,h) => String.fromCharCode(parseInt(h,16)));
+    if (d !== raw) results.push('Hex: ' + d);
+  } catch(_) {}
+  // Strip unicode \uXXXX
+  try {
+    const d = raw.replace(/\\u([0-9a-fA-F]{4})/g, (_,h) => String.fromCharCode(parseInt(h,16)));
+    if (d !== raw) results.push('Unicode: ' + d);
+  } catch(_) {}
+  // data: URI
+  if (raw.startsWith('data:text/html;base64,')) {
+    try { results.push('Data URI: ' + decodeURIComponent(escape(atob(raw.slice(22))))); } catch(_) {}
+  }
+
+  out.textContent = results.length ? results.join('\n') : 'Could not decode.';
+}
+
+// ── Copy / Download / Test ────────────────────────────────
+function copyUrl() {
+  const el = document.getElementById('urlOutput');
+  if (el.classList.contains('empty')) { toast(t('t_no_output'), 'err'); return; }
+  navigator.clipboard.writeText(el.textContent).then(() => toast(t('t_copied'), 'ok'));
+}
+
+function downloadUrl() {
+  const el = document.getElementById('urlOutput');
+  if (el.classList.contains('empty')) { toast(t('t_no_output'), 'err'); return; }
+  const text = el.textContent;
+  const isHtml = text.trim().startsWith('<') || text.startsWith('data:');
+  const ext  = isHtml ? 'html' : 'txt';
+  const mime = isHtml ? 'text/html' : 'text/plain';
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([text], {type: mime}));
+  a.download = 'encoded.' + ext;
+  a.click();
+  toast(t('t_downloading'), 'ok');
+}
+
+function testUrl() {
+  const el = document.getElementById('urlOutput');
+  if (el.classList.contains('empty')) { toast(t('t_no_output'), 'err'); return; }
+  const text = el.textContent;
+  // If it's a data URI, open directly
+  if (text.startsWith('data:')) { window.open(text, '_blank'); return; }
+  // If it's a URL, open directly
+  if (text.startsWith('http')) { window.open(text, '_blank'); return; }
+  // Otherwise try to eval in a sandboxed way via blob
+  const blob = new Blob(['<!DOCTYPE html><html><body><script>'+text+'<\/script></body></html>'], {type:'text/html'});
+  window.open(URL.createObjectURL(blob), '_blank');
+}
+
+const TOAST_ICONS = {
+  ok:   '<polyline points="20 6 9 17 4 12"/>',
+  err:  '<circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>',
+  info: '<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>'
+};
+let toastTimer;
+function toast(msg, type='info') {
+  const el = document.getElementById('toast');
+  document.getElementById('toastIcon').innerHTML = TOAST_ICONS[type] || TOAST_ICONS.info;
+  document.getElementById('toastMsg').textContent = msg;
+  el.className = 'toast '+type+' show';
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 3000);
+}
 </script>
 </body>
 </html>
