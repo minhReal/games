@@ -265,8 +265,20 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;bac
 .method-card:hover{border-color:#3a3d50;background:rgba(255,255,255,.02)}
 .method-card.active{border-color:var(--accent);background:var(--accent-dim)}
 .method-card.active .mc-name{color:var(--accent)}
-.mc-name{font-size:13px;font-weight:500;margin-bottom:3px;color:var(--text)}
-.mc-desc{font-size:11px;color:var(--muted);line-height:1.5}
+.mc-header{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:4px}
+.mc-name{font-size:13px;font-weight:500;color:var(--text)}
+.mc-desc{font-size:11px;color:var(--muted);line-height:1.5;margin-top:4px}
+.mc-header{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:1px}
+.strength{display:inline-flex;align-items:center;font-size:10px;font-weight:700;padding:2px 7px;border-radius:20px;letter-spacing:.3px;flex-shrink:0}
+.strength-weak{background:rgba(107,114,128,.12);color:#9ca3af;border:1px solid rgba(107,114,128,.2)}
+.strength-medium{background:rgba(245,158,11,.1);color:var(--yellow);border:1px solid rgba(245,158,11,.25)}
+.strength-strong{background:rgba(34,197,94,.1);color:var(--green);border:1px solid rgba(34,197,94,.22)}
+.strength-vstrong{background:rgba(108,99,255,.12);color:var(--accent);border:1px solid rgba(108,99,255,.28)}
+.mc-strength{font-size:10px;font-weight:600;padding:2px 7px;border-radius:20px;white-space:nowrap;flex-shrink:0}
+.strength-weak{background:rgba(107,114,128,.12);color:#9ca3af;border:1px solid rgba(107,114,128,.2)}
+.strength-medium{background:rgba(245,158,11,.1);color:var(--yellow);border:1px solid rgba(245,158,11,.22)}
+.strength-strong{background:rgba(249,115,22,.1);color:var(--orange);border:1px solid rgba(249,115,22,.22)}
+.strength-vstrong{background:rgba(239,68,68,.1);color:var(--red);border:1px solid rgba(239,68,68,.22)}
 .url-output-box{font-family:var(--mono);font-size:12.5px;color:#7dd3fc;padding:13px 14px;min-height:90px;word-break:break-all;line-height:1.7;white-space:pre-wrap;background:transparent}
 .url-output-box.empty{color:var(--muted2);font-style:italic}
 .url-opts{border-top:1px solid var(--border);padding:10px 14px;display:flex;flex-wrap:wrap;gap:12px;align-items:center}
@@ -783,43 +795,73 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;bac
       <div class="card-header"><span class="card-title" data-i18n="url_method"></span></div>
       <div class="method-grid">
         <div class="method-card active" onclick="selectMethod('base64',this)">
-          <div class="mc-name">Base64</div>
+          <div class="mc-header">
+            <div class="mc-name">Base64</div>
+            <span class="mc-strength strength-weak" data-i18n="str_weak"></span>
+          </div>
           <div class="mc-desc" data-i18n="url_m_b64"></div>
         </div>
         <div class="method-card" onclick="selectMethod('hex',this)">
-          <div class="mc-name">Hex Encode</div>
+          <div class="mc-header">
+            <div class="mc-name">Hex Encode</div>
+            <span class="mc-strength strength-weak" data-i18n="str_weak"></span>
+          </div>
           <div class="mc-desc" data-i18n="url_m_hex"></div>
         </div>
         <div class="method-card" onclick="selectMethod('percent',this)">
-          <div class="mc-name">Percent Encode</div>
+          <div class="mc-header">
+            <div class="mc-name">Percent Encode</div>
+            <span class="mc-strength strength-weak" data-i18n="str_weak"></span>
+          </div>
           <div class="mc-desc" data-i18n="url_m_pct"></div>
         </div>
         <div class="method-card" onclick="selectMethod('unicode',this)">
-          <div class="mc-name">Unicode (\uXXXX)</div>
+          <div class="mc-header">
+            <div class="mc-name">Unicode (\uXXXX)</div>
+            <span class="mc-strength strength-medium" data-i18n="str_medium"></span>
+          </div>
           <div class="mc-desc" data-i18n="url_m_uni"></div>
         </div>
         <div class="method-card" onclick="selectMethod('charcode',this)">
-          <div class="mc-name">Char Code</div>
+          <div class="mc-header">
+            <div class="mc-name">Char Code</div>
+            <span class="mc-strength strength-medium" data-i18n="str_medium"></span>
+          </div>
           <div class="mc-desc" data-i18n="url_m_chr"></div>
         </div>
         <div class="method-card" onclick="selectMethod('js_redirect',this)">
-          <div class="mc-name">JS Redirect</div>
+          <div class="mc-header">
+            <div class="mc-name">JS Redirect</div>
+            <span class="mc-strength strength-medium" data-i18n="str_medium"></span>
+          </div>
           <div class="mc-desc" data-i18n="url_m_jsr"></div>
         </div>
         <div class="method-card" onclick="selectMethod('html_meta',this)">
-          <div class="mc-name">HTML Meta Redirect</div>
+          <div class="mc-header">
+            <div class="mc-name">HTML Meta Redirect</div>
+            <span class="mc-strength strength-medium" data-i18n="str_medium"></span>
+          </div>
           <div class="mc-desc" data-i18n="url_m_html"></div>
         </div>
         <div class="method-card" onclick="selectMethod('multilayer',this)">
-          <div class="mc-name">Multi-layer</div>
+          <div class="mc-header">
+            <div class="mc-name">Multi-layer</div>
+            <span class="mc-strength strength-strong" data-i18n="str_strong"></span>
+          </div>
           <div class="mc-desc" data-i18n="url_m_multi"></div>
         </div>
         <div class="method-card" onclick="selectMethod('eval_b64',this)">
-          <div class="mc-name">eval(atob(...))</div>
+          <div class="mc-header">
+            <div class="mc-name">eval(atob(...))</div>
+            <span class="mc-strength strength-strong" data-i18n="str_strong"></span>
+          </div>
           <div class="mc-desc" data-i18n="url_m_eval"></div>
         </div>
         <div class="method-card" onclick="selectMethod('data_uri',this)">
-          <div class="mc-name">Data URI</div>
+          <div class="mc-header">
+            <div class="mc-name">Data URI</div>
+            <span class="mc-strength strength-vstrong" data-i18n="str_vstrong"></span>
+          </div>
           <div class="mc-desc" data-i18n="url_m_data"></div>
         </div>
       </div>
@@ -866,20 +908,6 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;bac
         </div>
       </div>
       <div class="url-output-box empty" id="urlOutput" data-i18n="url_output_empty"></div>
-    </div>
-
-    <!-- Decode section -->
-    <div class="card">
-      <div class="card-header">
-        <span class="card-title" data-i18n="url_decode_title"></span>
-      </div>
-      <div class="url-input-wrap">
-        <svg class="ic" viewBox="0 0 24 24" style="color:var(--muted)"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>
-        <input type="text" id="urlDecodeInput" data-i18n-placeholder="url_decode_placeholder"
-          autocomplete="off" autocapitalize="off" autocorrect="off"
-          oninput="runDecode()">
-      </div>
-      <div class="url-output-box" id="urlDecodeOutput" style="color:#a3e635;min-height:56px" data-i18n="url_decode_empty"></div>
     </div>
 
   </div>
@@ -988,21 +1016,23 @@ const STRINGS = {
     tab_url:'URL',
     url_input_label:'URL to Encode', url_placeholder:'https://example.com/path?q=value',
     url_method:'Encoding Method',
-    url_m_b64:'Encode URL to Base64 string',
-    url_m_hex:'Convert each character to \\xHH hex code',
-    url_m_pct:'Standard percent-encoding (%XX)',
-    url_m_uni:'Convert each character to \\uXXXX unicode',
-    url_m_chr:'Generate String.fromCharCode(...) expression',
-    url_m_jsr:'Generate obfuscated JS snippet that redirects to URL',
-    url_m_html:'Generate HTML meta-refresh tag with encoded URL',
-    url_m_multi:'Stack Base64 → Hex → Percent encoding (3 layers)',
-    url_m_eval:'Wrap redirect in eval(atob(...)) — harder to read',
-    url_m_data:'Encode as data: URI with embedded redirect page',
+    url_m_b64:'Simple Base64 encoding — easily reversed',
+    url_m_hex:'Each char → \\xNN hex — easily reversed',
+    url_m_pct:'Standard %XX encoding — easily reversed',
+    url_m_uni:'Each char → \\uXXXX — less obvious to humans',
+    url_m_chr:'fromCharCode array — needs JS knowledge to reverse',
+    url_m_jsr:'Obfuscated JS redirect — URL hidden in Base64',
+    url_m_html:'Meta-refresh tag with percent-encoded URL',
+    url_m_multi:'3 stacked layers — harder to trace manually',
+    url_m_eval:'eval(atob()) double wrap — very hard to read',
+    url_m_data:'Embedded redirect page as data: URI — very stealthy',
     url_opt_wrap:'Wrap in function', url_opt_double:'Double encode', url_opt_newtab:'Open in new tab',
     url_output:'Encoded Output', url_output_empty:'Encoded URL will appear here...',
-    url_decode_title:'Decode / Reverse', url_decode_placeholder:'Paste encoded URL or Base64 here...',
-    url_decode_empty:'Decoded result will appear here...',
     url_layer:'layers',
+    str_weak:'Weak',
+    str_medium:'Medium',
+    str_strong:'Strong',
+    str_vstrong:'Very Strong',
   },
   vi: {
     sub:'Mã Hoá JavaScript Nâng Cao',
@@ -1087,21 +1117,23 @@ const STRINGS = {
     tab_url:'URL',
     url_input_label:'URL cần mã hoá', url_placeholder:'https://example.com/path?q=value',
     url_method:'Phương thức mã hoá',
-    url_m_b64:'Mã hoá URL thành chuỗi Base64',
-    url_m_hex:'Chuyển mỗi ký tự thành mã \\xHH hex',
-    url_m_pct:'Percent-encoding tiêu chuẩn (%XX)',
-    url_m_uni:'Chuyển mỗi ký tự thành \\uXXXX unicode',
-    url_m_chr:'Tạo biểu thức String.fromCharCode(...)',
-    url_m_jsr:'Tạo đoạn JS bị che giấu, tự động redirect đến URL',
-    url_m_html:'Tạo thẻ meta-refresh HTML với URL được mã hoá',
-    url_m_multi:'Chồng 3 lớp: Base64 → Hex → Percent encode',
-    url_m_eval:'Bọc redirect trong eval(atob(...)) — khó đọc hơn',
-    url_m_data:'Mã hoá thành data: URI chứa trang redirect nhúng sẵn',
+    url_m_b64:'Base64 đơn giản — dễ bị giải mã',
+    url_m_hex:'Mỗi ký tự → \\xNN hex — dễ bị giải mã',
+    url_m_pct:'%XX tiêu chuẩn — dễ bị giải mã',
+    url_m_uni:'Mỗi ký tự → \\uXXXX — ít rõ ràng hơn với người',
+    url_m_chr:'fromCharCode — cần kiến thức JS để giải',
+    url_m_jsr:'JS redirect che giấu — URL ẩn trong Base64',
+    url_m_html:'Thẻ meta-refresh với URL percent-encoded',
+    url_m_multi:'3 lớp chồng nhau — khó truy ngược thủ công',
+    url_m_eval:'eval(atob()) bọc kép — rất khó đọc',
+    url_m_data:'Trang redirect nhúng trong data: URI — rất khó phát hiện',
     url_opt_wrap:'Bọc trong hàm', url_opt_double:'Mã hoá 2 lần', url_opt_newtab:'Mở tab mới',
     url_output:'Kết quả', url_output_empty:'Kết quả mã hoá sẽ hiện ở đây...',
-    url_decode_title:'Giải mã / Decode', url_decode_placeholder:'Dán URL hoặc chuỗi Base64 đã mã hoá...',
-    url_decode_empty:'Kết quả giải mã sẽ hiện ở đây...',
     url_layer:'lớp',
+    str_weak:'Yếu',
+    str_medium:'Trung Bình',
+    str_strong:'Mạnh',
+    str_vstrong:'Rất Mạnh',
   }
 };
 
@@ -1760,37 +1792,7 @@ function toCharCode(str) {
   return 'String.fromCharCode(' + codes + ')';
 }
 
-// ── Decode ────────────────────────────────────────────────
-function runDecode() {
-  const raw = document.getElementById('urlDecodeInput').value.trim();
-  const out = document.getElementById('urlDecodeOutput');
-  if (!raw) { out.textContent = t('url_decode_empty'); out.classList.add('empty'); return; }
-  out.classList.remove('empty');
-  const results = [];
 
-  // Try Base64
-  try { results.push('Base64: ' + decodeURIComponent(escape(atob(raw)))); } catch(_) {}
-  // Try percent decode
-  try { const d = decodeURIComponent(raw); if (d !== raw) results.push('Percent: ' + d); } catch(_) {}
-  // Try double percent
-  try { const d = decodeURIComponent(decodeURIComponent(raw)); if (d !== raw) results.push('Double %: ' + d); } catch(_) {}
-  // Strip hex escapes \xNN
-  try {
-    const d = raw.replace(/\\x([0-9a-fA-F]{2})/g, (_,h) => String.fromCharCode(parseInt(h,16)));
-    if (d !== raw) results.push('Hex: ' + d);
-  } catch(_) {}
-  // Strip unicode \uXXXX
-  try {
-    const d = raw.replace(/\\u([0-9a-fA-F]{4})/g, (_,h) => String.fromCharCode(parseInt(h,16)));
-    if (d !== raw) results.push('Unicode: ' + d);
-  } catch(_) {}
-  // data: URI
-  if (raw.startsWith('data:text/html;base64,')) {
-    try { results.push('Data URI: ' + decodeURIComponent(escape(atob(raw.slice(22))))); } catch(_) {}
-  }
-
-  out.textContent = results.length ? results.join('\n') : 'Could not decode.';
-}
 
 // ── Copy / Download / Test ────────────────────────────────
 function copyUrl() {
