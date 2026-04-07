@@ -5,7 +5,25 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>JSCipher</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/javascript-obfuscator@4.0.0/dist/index.browser.js"></script>
+<script>
+(function(){
+  const CDNS=[
+    "https://cdn.jsdelivr.net/npm/javascript-obfuscator@4.0.0/dist/index.browser.js",
+    "https://unpkg.com/javascript-obfuscator@4.0.0/dist/index.browser.js",
+    "https://cdnjs.cloudflare.com/ajax/libs/javascript-obfuscator/4.0.0/index.browser.js"
+  ];
+  let idx=0;
+  function tryLoad(){
+    if(idx>=CDNS.length){window._libFailed=true;document.dispatchEvent(new Event("obf-lib-fail"));return;}
+    const s=document.createElement("script");
+    s.src=CDNS[idx++];
+    s.onload=()=>{if(typeof JavaScriptObfuscator!=="undefined"){document.dispatchEvent(new Event("obf-lib-ready"));}else{tryLoad();}};
+    s.onerror=()=>tryLoad();
+    document.head.appendChild(s);
+  }
+  tryLoad();
+})();
+</script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 :root{
@@ -381,7 +399,7 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;bac
       <span id="perfWarnText"></span>
     </div>
 
-    <button class="btn btn-primary" onclick="obfuscate()" id="encryptBtn">
+    <button class="btn btn-primary" onclick="obfuscate()" id="encryptBtn" disabled>
       <div class="spinner" id="spinner"></div>
       <svg class="ic ic-lg" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
       <span id="btnText" data-i18n="btn_obfuscate"></span>
@@ -1132,18 +1150,45 @@ function openSettings(){ document.getElementById('settingsOverlay').classList.ad
 function closeSettings(){ document.getElementById('settingsOverlay').classList.remove('open'); }
 
 // ── Lib check ─────────────────────────────────────────────
-window.addEventListener('load', () => {
+// Show loading state immediately
+window.addEventListener('DOMContentLoaded', () => {
+  const lbl = document.getElementById('libLabel');
+  if(lbl) lbl.textContent = 'Loading...';
+  applyI18n();
+});
+
+function _libReady() {
   const dot = document.getElementById('libDot');
   const lbl = document.getElementById('libLabel');
-  if (typeof JavaScriptObfuscator !== 'undefined') {
-    dot.classList.add('ok'); lbl.textContent = t('lib_ready'); lbl.style.color = 'var(--green)';
-  } else {
-    dot.classList.add('err'); lbl.textContent = 'Error'; lbl.style.color = 'var(--red)';
-    document.getElementById('errBanner').classList.add('show');
-    document.getElementById('errMsg').textContent = 'JavaScriptObfuscator is not defined';
-    document.getElementById('encryptBtn').disabled = true;
-  }
+  dot.classList.remove('err'); dot.classList.add('ok');
+  lbl.textContent = t('lib_ready'); lbl.style.color = 'var(--green)';
+  document.getElementById('errBanner').classList.remove('show');
+  document.getElementById('encryptBtn').disabled = false;
   applyI18n();
+}
+
+function _libFail() {
+  const dot = document.getElementById('libDot');
+  const lbl = document.getElementById('libLabel');
+  dot.classList.remove('ok'); dot.classList.add('err');
+  lbl.textContent = 'Error'; lbl.style.color = 'var(--red)';
+  document.getElementById('errBanner').classList.add('show');
+  document.getElementById('errMsg').textContent =
+    'All CDNs failed. Check your network or try refreshing.';
+  document.getElementById('encryptBtn').disabled = true;
+}
+
+document.addEventListener('obf-lib-ready', _libReady);
+document.addEventListener('obf-lib-fail', _libFail);
+
+// Fallback: also check on window load in case events already fired
+window.addEventListener('load', () => {
+  if (typeof JavaScriptObfuscator !== 'undefined') {
+    _libReady();
+  } else if (window._libFailed) {
+    _libFail();
+  }
+  // else still loading — events will fire
 });
 
 // ── Tabs ──────────────────────────────────────────────────
